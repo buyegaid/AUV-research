@@ -5,8 +5,7 @@
 clear all; close all; clc;
 
 % Add path to access xhy function
-addpath('..');
-addpath('../Lib');
+addpath('.', './Lib', './guidance', './controller/xhy', './controller/remus', './model', './eso', './post', './traj');
 
 % Simulation parameters
 tspan = [0 100];  % 100 seconds

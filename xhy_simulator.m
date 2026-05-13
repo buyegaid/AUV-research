@@ -6,8 +6,8 @@ clear; close all; clc;
 clear smc_yaw_xhy smc_pitch_xhy smc_surge_xhy smc_heave_xhy my_ALOS3D vec_leso_update_adv
 
 %% 宏参数
-useESO    = 1;   % 是否使用ESO补偿
-TrajMode  = 1;   % 1-直线, 2-圆形
+useESO    = 0;   % 是否使用ESO补偿
+TrajMode  = 2;   % 1-直线, 2-圆形
 DepthMode = 2;   % 1-俯仰控深, 2-直接Z力控深
 params    = get_params;
 
@@ -26,7 +26,8 @@ theta_d = 0; q_d = 0;
 psi_d   = psi0; r_d = 0;
 u_d     = 1;    u_d_dot = 0;
 z_d     = zn;   w_d = 0;  w_d_dot = 0;  % 深度参考（Mode 2用）
-
+x_d = xn;
+y_d = yn;
 %% 海流
 Vc     = params.current.Vc;
 betaVc = params.current.betaVc;
@@ -47,7 +48,7 @@ Z = zeros(6, 3);
 
 %% 轨迹
 if TrajMode == 1
-    pts = line_traj([xn; yn; zn], 0, 50, 50);
+    pts = line_traj([x_d; y_d; z_d], 0, 50, 50);
 else
     pts = traj(50, 50);
 end

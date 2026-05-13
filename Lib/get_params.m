@@ -1,7 +1,7 @@
-function params = get_params
+function params = get_params()
 %% 海流参数
-params.current.Vc = 0.5;
-params.current.betaVc = pi/2; % 海流方向相对于正北的夹角，顺时针为正
+params.current.Vc = 0;
+params.current.betaVc = 0; % 海流方向相对于正北的夹角，顺时针为正
 params.current.wc = 0;
 
 %% 航向 ISMC 参数

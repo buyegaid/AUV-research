@@ -107,17 +107,14 @@ g = gRvect(W, B, R, r_bG, r_bB);
 % Thruster mapping (5 thrusters)
 % ui = [n_main, n_vert1, n_vert2, n_side1, n_side2]' in RPM
 n_max = 2500;            % Nominal maximum thruster speed (RPM)
-n = sat(ui, n_max) / 60; % convert to rps
+n_rpm = sat(ui, n_max);  % RPM with saturation
 
-% Simple propeller thrust model, adjustable later
-D_prop = 0.10;            % Thruster diameter (m)
-KT = 0.22;                % Nominal thrust coefficient
-
-T_main  = rho * D_prop^4 * KT * abs(n(1)) * n(1);
-T_vert1 = rho * D_prop^4 * KT * abs(n(2)) * n(2);
-T_vert2 = rho * D_prop^4 * KT * abs(n(3)) * n(3);
-T_side1 = rho * D_prop^4 * KT * abs(n(4)) * n(4);
-T_side2 = rho * D_prop^4 * KT * abs(n(5)) * n(5);
+% 推力计算：主推直径10cm，辅助推直径7cm
+T_main  = thrust_main(n_rpm(1), rho);
+T_vert1 = thrust_aux(n_rpm(2), rho);
+T_vert2 = thrust_aux(n_rpm(3), rho);
+T_side1 = thrust_aux(n_rpm(4), rho);
+T_side2 = thrust_aux(n_rpm(5), rho);
 
 % Thruster geometry (modifiable)
 x_vert_f = +0.344;  % fore vertical thruster x-position (m)
