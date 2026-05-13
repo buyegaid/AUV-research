@@ -1,0 +1,48 @@
+# MATLAB临时文件
+*.asv
+*.m~
+*.autosave
+
+# MATLAB编译文件
+*.mex*
+*.p
+
+# Simulink自动保存
+*.slxc
+slprj/
+*.slxc
+
+# 代码生成文件
+codegen/
+
+# 仿真缓存
+*.slxc
+sccprj/
+
+# 数据文件（可选，根据需要调整）
+*.mat
+*.fig
+
+# 日志文件
+*.log
+
+# 操作系统文件
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE配置
+.vscode/
+.idea/
+*.code-workspace
+
+# 临时文件
+*~
+*.swp
+*.swo
+*.tmp
+
+# 输出文件（可选）
+output/
+results/
+figures/
