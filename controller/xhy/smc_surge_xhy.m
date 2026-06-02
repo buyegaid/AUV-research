@@ -29,6 +29,8 @@ else
 end
 
 D_linear = m_eff / T1;
+% 注：前馈仅用线性阻尼D_linear*u，CFD阻力中的二次项(1.62*u*|u|)由SMC鲁棒项补偿
+%  设计权衡：简化前馈模型 → 增大滑模面波动，但控制器结构更简单，鲁棒性由Ks项保证
 X_cmd = m_eff*(u_d_dot - lambda*e_u - Kd*sigma - Ks*sat_s) + D_linear*u;
 
 u_int = u_int + h * e_u;
