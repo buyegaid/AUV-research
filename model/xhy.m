@@ -88,7 +88,7 @@ g = gRvect(W, B, R, r_bG, r_bB);
 n_max = 2500;            % Nominal maximum thruster speed (RPM)
 n_rpm = sat(ui, n_max);  % RPM with saturation
 
-% 推力计算：主推直径10cm，辅助推直径7cm
+% 推力计算：主推直径10cm，辅助推直径6cm
 T_main  = thrust_main(n_rpm(1), rho);
 T_vert1 = thrust_aux(n_rpm(2), rho);
 T_vert2 = thrust_aux(n_rpm(3), rho);

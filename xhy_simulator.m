@@ -34,10 +34,14 @@ Vc     = params.current.Vc;
 betaVc = params.current.betaVc;
 wc     = params.current.wc;
 
-%% 推力分配参数
-thr_params.rho     = 1026;
-thr_params.D_prop  = 0.10;
-thr_params.KT      = 0.22;
+%% 推力分配参数（与thrust_main.m、thrust_aux.m保持一致）
+thr_params.rho         = 1026;
+thr_params.D_prop_main = 0.10;      % 主推直径10cm
+thr_params.D_prop_aux  = 0.06;      % 辅推直径6cm
+thr_params.KT_main_fwd = 0.019;     % 主推正向KT（时域辨识校准）
+thr_params.KT_main_rev = 0.013;     % 主推反向KT
+thr_params.KT_aux_fwd  = 0.22;      % 辅推正向KT
+thr_params.KT_aux_rev  = 0.22;      % 辅推反向KT
 thr_params.n_max   = 2500;
 thr_params.x_vert_f = +0.344;
 thr_params.x_vert_r = -0.293;
