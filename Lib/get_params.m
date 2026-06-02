@@ -68,8 +68,8 @@ params.auv.n_min = 0;                 % 推进器最小速度 (RPM)
 % 3DALOS路径跟踪参数
 params.alos.delta_h = 20;            % 水平前视距离 (m)
 params.alos.delta_v = 20;            % 垂直前视距离 (m)
-params.alos.gamma_h = 0.002;         % 自适应增益，水平方向
-params.alos.gamma_v = 0.002;         % 自适应增益，垂直方向
+params.alos.gamma_h = 0;             % 自适应增益关闭（由ESO补偿海流）
+params.alos.gamma_v = 0;             % 自适应增益关闭
 params.alos.M_theta = deg2rad(20);   % 最大估计角 (rad)
 params.alos.R_switch = 10;           % 航点切换半径 (m)
 params.alos.K_f = 0.5;               % LOS观测器的增益 LOS observer gain
@@ -77,8 +77,7 @@ params.alos.K_f = 0.5;               % LOS观测器的增益 LOS observer gain
 %% XHY SMC参数
 % 纵荡通道 (m_eff = m + Xu_dot = 33 + 11.2773)
 params.xhy.surge.m_eff  = 44.2773;
-params.xhy.surge.d1     = 0.5880;
-params.xhy.surge.d2     = 1.1456;
+params.xhy.surge.T1     = 20;      % 纵荡时间常数 (与xhy.m中T1一致)
 params.xhy.surge.lambda = 0.3;
 params.xhy.surge.Kd     = 5;
 params.xhy.surge.Ks     = 3;
@@ -122,5 +121,9 @@ params.eso.meas_lpf_fc = 0.5; % 低通截止频率
 params.eso.z3_lpf_fc = 1; % Z3输出一阶低通滤波截止频率
 params.eso.use_rk4 = true;
 params.eso.z3_sat = 20; % adjust depending units (accels)
+
+%% 物理信息ESO参数（PI-ESO，Gauss-Markov海流模型）
+params.pieso = params.eso;  % 继承标准ESO参数
+params.pieso.tau_c = 50;    % Gauss-Markov相关时间常数 (s)，对应低频海流
 
 end
