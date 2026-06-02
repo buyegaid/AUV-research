@@ -3,10 +3,11 @@
 % DepthMode = 1: 俯仰角控制深度（ALOS给theta_ref → SMC pitch → M_cmd）
 % DepthMode = 2: 直接Z力控制深度（深度误差 → SMC heave → Z_cmd）
 clear; close all; clc;
-clear smc_yaw_xhy smc_pitch_xhy smc_surge_xhy smc_heave_xhy my_ALOS3D vec_leso_update_adv
+clear smc_yaw_xhy smc_pitch_xhy smc_surge_xhy smc_heave_xhy my_ALOS3D vec_leso_update_adv vec_pieso_update
 
 %% 宏参数
 useESO    = 0;   % 是否使用ESO补偿
+usePIESO  = 1;   % 是否使用物理信息ESO（PI-ESO，Gauss-Markov海流模型）
 TrajMode  = 2;   % 1-直线, 2-圆形
 DepthMode = 2;   % 1-俯仰控深, 2-直接Z力控深
 params    = get_params;
@@ -33,10 +34,14 @@ Vc     = params.current.Vc;
 betaVc = params.current.betaVc;
 wc     = params.current.wc;
 
-%% 推力分配参数
-thr_params.rho     = 1026;
-thr_params.D_prop  = 0.10;
-thr_params.KT      = 0.22;
+%% 推力分配参数（与thrust_main.m、thrust_aux.m保持一致）
+thr_params.rho         = 1026;
+thr_params.D_prop_main = 0.10;      % 主推直径10cm
+thr_params.D_prop_aux  = 0.06;      % 辅推直径6cm
+thr_params.KT_main_fwd = 0.019;     % 主推正向KT（时域辨识校准）
+thr_params.KT_main_rev = 0.013;     % 主推反向KT
+thr_params.KT_aux_fwd  = 0.22;      % 辅推正向KT
+thr_params.KT_aux_rev  = 0.22;      % 辅推反向KT
 thr_params.n_max   = 2500;
 thr_params.x_vert_f = +0.344;
 thr_params.x_vert_r = -0.293;
@@ -83,7 +88,11 @@ for i = 1:N
 
     % ESO更新：已知加速度 = M^{-1}*(tau - C*nu_r - D*nu_r - g)
     a_known = M \ (tau_thr - C*nu_r - D*nu_r - g_vec);
-    [Z, ~]  = vec_leso_update_adv(Z, x(1:6), a_known, params.eso, h);
+    if usePIESO
+        [Z, ~] = vec_pieso_update(Z, x(1:6), a_known, params.pieso, h);
+    else
+        [Z, ~] = vec_leso_update_adv(Z, x(1:6), a_known, params.eso, h);
+    end
 
     % ESO扰动估计（加速度单位 → 力/力矩单位）
     if useESO
