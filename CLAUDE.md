@@ -2,7 +2,7 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-> **当前线程：XHY 动力学模型搭建** | 切换：`/worktree dynamics|control|eso`
+> **当前线程：控制方法研究** | 切换：`/worktree control`
 
 ## 工作目录
 
@@ -28,43 +28,40 @@ addpath('.', './Lib', './guidance', './controller/xhy', './controller/remus', '.
 
 ---
 
-## 线程 1：XHY 动力学模型搭建
+## 线程 2：控制方法研究
 
-### CFD 仿真
+### XHY 平台（5 推进器推力分配）
 
-- 已完成：Surge/Sway/Heave 直航+斜航阻力 CFD（Fluent），结果写入 `model/xhy_drag_cfd.m`
-- 进行中：转动阻尼 MRF CFD（横滚/俯仰/偏航，12工况），当前用时间常数法临时替代
-- 待开展：斜航/旋转臂 CFD（交叉耦合阻尼 36工况）、附加质量交叉项辨识
+- 4 通道 SMC 控制器：`smc_surge_xhy`（纵荡）、`smc_yaw_xhy`（转艏）、`smc_pitch_xhy`（俯仰）、`smc_heave_xhy`（垂荡）
+- 深度控制双模式：`DepthMode=1`（俯仰角控深）vs `DepthMode=2`（直接 Z 力控深）
+- Station-keeping 定点控制测试：`run_sk.m`、`run_sk_omega0.m`、`run_sk_tauc.m` 等
 
-### 水池实验验证与修正
+### REMUS 平台（舵面控制，方法验证）
 
-- **2026-05-30 实验**（T1 前垂推故障）：完成动力学校准，推进器有效推力系数 KT 从理论值 0.33 → 实测等效值 0.019，阻力系数全部更新（详见 [[analysis_report_260530]]）
-- **2026-06-01 实验**（T1 修复后）：验证 T1 恢复正常，Z-M 解耦恢复，推进器推力系数重新标定 k=0.001282 CAN-g→N，确认所有通道控制有效（详见 [[水池实验分析_20260603]]）
+- SMC/ISMC/SMC+ESO 三种方法对比框架
+- 3D ALOS 制导 + 航向/俯仰/速度三通道控制
 
-### 关键发现
+### 控制器参数调整
 
-- CAN 指令单位"g"为无量纲值，满指令 8000g 实际推力约 6-10 N（非 78.5 N）
-- 推进系统总效率 ~2.5%（受待机功耗和低推力工况影响）
-- Sway 和 Yaw 为最强控制通道（r≈0.64-0.66），Pitch 激励不足需专项测试
-- 模型从 CFD 理想值 → 实测标定值，Surge/Heave/Yaw 稳态速度匹配度 >94%
+- ALOS 自适应增益 `gamma_h/gamma_v` 从 0.002 → 0（关闭自适应，由 ESO 补偿海流）
+- SMC 纵荡通道从 d1/d2 参数化 → T1 时间常数参数化
 
-### 模型更新（2026-05-31）
+### XHY 单通道 SMC 控制器接口
 
-- `model/xhy.m`：阻力计算从 `forceLiftDrag+crossFlowDrag` → `xhy_drag_cfd`（基于 CFD 数据）
-- `model/drag.m`：统一使用时间常数法（T1=T2=20s, T6=1s）
-- `model/thrust_main.m`：KT_f 从 0.33 → 0.019（等效推力系数）
-- `model/thrust_aux.m`：死区补偿参数更新
-- `controller/xhy/smc_surge_xhy.m`：阻力补偿从 d1/d2 二次模型 → T1 时间常数线性模型
+所有控制器使用 `persistent` 变量保存积分状态，**切换仿真前必须 `clear` 对应函数**（`xhy_simulator.m:6` 已处理）。
 
-### Obsidian 参考文档（tag: 小黄鱼）
+| 控制器 | 输入 | 输出 | 关键参数 |
+|--------|------|------|----------|
+| `smc_surge_xhy` | u, u_d, u_d_dot | X (N) | m_eff, T1, lambda, Kd, Ks（T1 时间常数参数化） |
+| `smc_yaw_xhy` | psi, r, psi_d, r_d | N (N·m) | Iz_eff, lambda, Kd, Ks |
+| `smc_pitch_xhy` | theta, q, theta_d, q_d | M (N·m) | Iy_eff, lambda, Kd, Ks |
+| `smc_heave_xhy` | zn, w, z_d, w_d | Z (N) | m_eff_z, d_w, g_z |
 
-| 笔记 | 内容 |
-|------|------|
-| [[水池实验记录]] | 2026-06-01 水池实验原始记录（时间线、mode 说明、各测试段详情） |
-| [[水池实验分析_20260603]] | 2026-06-01 实验完整分析（T1 修复验证、系统辨识、修复前后对比） |
-| [[analysis_report_260530]] | 2026-05-30 实验分析（T1 故障诊断、动力学校准方法、CAN 协议） |
-| [[CAN协议说明]] | 推进器控制 CAN 协议（帧格式、推力分配矩阵、电机标定、安全机制） |
-| [[CFD]] | CFD 仿真执行方案（文献方法总结、P1 转动阻尼/P2 交叉耦合/P3 附加质量计划） |
+### 深度控制模式（XHY）
+
+在 `xhy_simulator.m` 中修改 `DepthMode`：
+- `DepthMode = 1` — 俯仰角控深：ALOS → theta_ref → SMC pitch → M 力矩
+- `DepthMode = 2` — 直接 Z 力控深：深度误差 → SMC heave → Z 力（俯仰保持水平）
 
 ---
 
@@ -83,10 +80,9 @@ hist_eso  = main_loop_remus(1, 2, 1, 1, 2, 1, params);  % SMC+ESO
 % 对比分析
 compare_results(hist_smc, hist_eso, 'SMC vs SMC+ESO');
 % 指标：航向误差RMSE、横向误差RMSE、舵角RMS、滑模面RMS
-
-% 测试动力学模型
-cd model/test && test_xhy_dynamics
 ```
+
+`main_loop_remus` 参数顺序：`(useESO, TrajMode, CurrentModel, ControlFlag, HeadingMode, KinematicsFlag, params)`
 
 ## 控制架构
 
@@ -96,28 +92,40 @@ cd model/test && test_xhy_dynamics
                     ESO/PI-ESO 扰动估计（hat_d = M * Z(:,3)）
 ```
 
+**ESO 补偿方式：**
+```matlab
+hat_d = M * Z(:, 3);          % 加速度单位 → 力/力矩单位
+X_cmd = smc_surge_xhy(...) - hat_d(1);   % 前馈补偿
+N_cmd = smc_yaw_xhy(...)   - hat_d(6);
+```
+
+**REMUS 平台 ESO 补偿方式（`controller/remus/SMCheading.m`）：**
+```matlab
+delta_eso = -(T_nomoto / K_nomoto) * rho_eso * hat_dr;  % 舵角补偿
+```
+
 ## 参数配置
 
 所有可调参数集中在 `Lib/get_params.m`：
-- `params.current.*` — 海流速度/方向
+- `params.current.*` — 海流速度/方向（Vc=0 关闭海流）
 - `params.xhy.surge/yaw/pitch/heave` — XHY 各通道 SMC 增益
-- `params.eso.*` — ESO 带宽、滤波、RK4
-- `params.pieso.*` — PI-ESO + Gauss-Markov τ_c
-- `params.alos.*` — ALOS 前视距离、自适应增益
+- `params.eso.*` — ESO 带宽（omega0_base/max）、滤波截止频率、RK4 开关
+- `params.pieso.*` — PI-ESO 参数，继承标准 ESO + Gauss-Markov τ_c 时间常数
+- `params.alos.*` — ALOS 前视距离、自适应增益（gamma=0 关闭，由 ESO 补偿）、航点切换半径
 - `params.heading/pitch/surge` — REMUS 平台控制器参数
 
 ## 关键模型文件
 
 | 文件 | 功能 | 备注 |
 |------|------|------|
-| `model/xhy.m` | XHY 6-DOF 动力学主模型 | CFD 阻力 + 推力分配 |
-| `model/xhy_drag_cfd.m` | CFD 标定阻力模型 | Fluent 仿真系数 |
-| `model/drag.m` | 线性阻尼矩阵 | 时间常数法 |
-| `model/thrust_main.m` | 主推进器推力 | KT_f=0.019 |
-| `model/thrust_aux.m` | 辅助推进器推力 | 死区补偿 |
-| `model/gauss_markov_current.m` | 时变海流生成器 | 4 种场景 |
-| `eso/vec_leso_update_adv.m` | 标准 LESO | 自适应带宽 |
-| `eso/vec_pieso_update.m` | PI-ESO | GM 海流先验 |
+| `model/xhy.m` | XHY 6-DOF 动力学主模型 | 阻力用 `xhy_drag_cfd`（CFD 数据），推进器用推力分配 |
+| `model/xhy_drag_cfd.m` | CFD 标定的阻力模型 | Surge/Sway/Heave 二次阻力系数来自 Fluent 仿真 |
+| `model/drag.m` | 通用线性阻尼矩阵 | 时间常数法（T1=20s surge, T2=20s sway, T6=1s yaw） |
+| `model/thrust_main.m` | 主推进器推力模型 | KT_f=0.019（等效系数，含实际损耗） |
+| `model/thrust_aux.m` | 辅助推进器推力模型 | 4 垂推/侧推，含死区补偿 |
+| `model/gauss_markov_current.m` | 时变海流生成器 | 4 种场景：均匀/GM缓变/剪切/空间相关 |
+| `eso/vec_leso_update_adv.m` | 标准 LESO（自适应带宽） | 6-DOF 扰动观测，前馈补偿 |
+| `eso/vec_pieso_update.m` | 物理信息 ESO（PI-ESO） | 嵌入 GM 海流模型，Z3 含衰减项 -Λ·Z3 |
 
 ## 调试
 
@@ -126,8 +134,9 @@ cd model/test && test_xhy_dynamics
 - `hist.ui` — 控制输入（XHY: 5推进器RPM；REMUS: [delta_r, delta_s, n]）
 - `hist.tau` / `hist.tau_cmd` — 力/力矩指令
 - `hist.Z` — ESO 状态（6×3 展开为 18 列）
+- `hist.e_psi`, `hist.e_y`, `hist.sigma_heading` — REMUS 误差诊断量
 
-推力分配诊断：`[ui, info] = thrust_allocation_xhy(tau_cmd, thr_params)`。
+推力分配诊断：`[ui, info] = thrust_allocation_xhy(tau_cmd, thr_params)`，`info` 含饱和状态。
 
 ## 代码约定
 
@@ -162,9 +171,11 @@ lark-cli docs +update --api-version v2 \
   --content '<h2>标题</h2><p>内容</p>'
 ```
 
+**注意：** `--command append --block-id <章节id>` 将内容追加到该章节末尾。写入前先用 `+fetch --scope section --start-block-id` 读取现有内容避免重复。
+
 ## 飞书通知
 
-使用 `/feishu-notify-auv` skill 或 `notify_feishu.sh` 脚本发送通知。
+使用 `/feishu-notify-auv` skill 或 `notify_feishu.sh` 脚本向用户发送实验/仿真完成通知。
 
 ```bash
 bash notify_feishu.sh "标题" "内容"
