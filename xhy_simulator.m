@@ -3,10 +3,11 @@
 % DepthMode = 1: 俯仰角控制深度（ALOS给theta_ref → SMC pitch → M_cmd）
 % DepthMode = 2: 直接Z力控制深度（深度误差 → SMC heave → Z_cmd）
 clear; close all; clc;
-clear smc_yaw_xhy smc_pitch_xhy smc_surge_xhy smc_heave_xhy my_ALOS3D vec_leso_update_adv
+clear smc_yaw_xhy smc_pitch_xhy smc_surge_xhy smc_heave_xhy my_ALOS3D vec_leso_update_adv vec_pieso_update
 
 %% 宏参数
 useESO    = 0;   % 是否使用ESO补偿
+usePIESO  = 1;   % 是否使用物理信息ESO（PI-ESO，Gauss-Markov海流模型）
 TrajMode  = 2;   % 1-直线, 2-圆形
 DepthMode = 2;   % 1-俯仰控深, 2-直接Z力控深
 params    = get_params;
@@ -83,7 +84,11 @@ for i = 1:N
 
     % ESO更新：已知加速度 = M^{-1}*(tau - C*nu_r - D*nu_r - g)
     a_known = M \ (tau_thr - C*nu_r - D*nu_r - g_vec);
-    [Z, ~]  = vec_leso_update_adv(Z, x(1:6), a_known, params.eso, h);
+    if usePIESO
+        [Z, ~] = vec_pieso_update(Z, x(1:6), a_known, params.pieso, h);
+    else
+        [Z, ~] = vec_leso_update_adv(Z, x(1:6), a_known, params.eso, h);
+    end
 
     % ESO扰动估计（加速度单位 → 力/力矩单位）
     if useESO
