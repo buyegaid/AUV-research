@@ -3,7 +3,7 @@ function [D, tau_Dv] = drag(nu_r, U_r, MRB, MA, W, r_bG, r_bB)
 %   [D, tau_Dv] = drag(nu_r, U_r, MRB, MA, W, r_bG, r_bB)
 %   Returns the linear damping matrix D and the generalized drag
 %   force vector D * nu_r.
-
+% 输入是相对速度nu_r，绝对速度U_r，刚体质量矩阵MRB，附加质量矩阵MA，重力W，重心位置r_bG和浮心位置r_bB。
 % Low-speed linear damping matrix parameters
 T1 = 20;
 T2 = 20;

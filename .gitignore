@@ -46,3 +46,16 @@ desktop.ini
 output/
 results/
 figures/
+
+# Claude Code 工作树和代理元数据
+.claude/worktrees/
+.agents/
+
+# ARIS 技能安装清单
+.aris/
+
+# 备份文件
+*.bak
+
+# 本地设置（不提交）
+.claude/settings.local.json
