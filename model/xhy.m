@@ -50,12 +50,6 @@ nu_r = nu - nu_c;
 U_r = norm(nu_r(1:3));
 U   = norm(nu(1:3));
 
-% AUV parameters (spheroid approximation)
-L_auv = 1.242;               % AUV length (m)
-D_auv = 0.24;                % AUV diameter (m)
-H_auv = 0.42;                % AUV height (m)
-S = 93223.78e-6;                % Planform area(mm^2)
-
 r_bG = [0 0 0]';             % 重心位置(m)
 r_bB = [0 0 -0.03]';         % 浮心位置(m)
 
@@ -82,23 +76,8 @@ M = MRB + MA;
 W = m * g_mu;
 B = W*1.01; % 轻微正浮力
 
-% 阻力矩阵
-% Low-speed linear damping matrix parameters 低速线性阻尼矩阵参数
-T1 = 20;                 % Time constant in surge (s)
-T2 = 20;                 % Time constant in sway (s)
-zeta4 = 0.3;             % Relative damping ratio in roll
-zeta5 = 0.8;             % Relative damping ratio in pitch
-T6 = 1;                  % Time constant in yaw (s)
-D = Dmtrx([T1 T2 T6],[zeta4 zeta5],MRB,MA,[W r_bG' r_bB']);
-D(1,1) = D(1,1) * exp(-3 * U_r);
-D(2,2) = D(2,2) * exp(-3 * U_r);
-
-% 计算阻力
-Cd = 0.42;
-CD_0 = Cd * pi * D_auv^2 / S;
-alpha = atan2(nu_r(3), nu_r(1));
-tau_liftdrag = forceLiftDrag(D_auv, S, CD_0, alpha, U_r);
-tau_crossflow = crossFlowDrag(L_auv, D_auv, D_auv, nu_r, 'cylinder');
+% 计算阻力（基于CFD仿真数据）
+[tau_drag, D] = xhy_drag_cfd(nu_r, M);
 
 % 运动学和重力/浮力矩阵
 [J,R] = eulerang(x(10), x(11), x(12));
@@ -109,7 +88,7 @@ g = gRvect(W, B, R, r_bG, r_bB);
 n_max = 2500;            % Nominal maximum thruster speed (RPM)
 n_rpm = sat(ui, n_max);  % RPM with saturation
 
-% 推力计算：主推直径10cm，辅助推直径7cm
+% 推力计算：主推直径10cm，辅助推直径6cm
 T_main  = thrust_main(n_rpm(1), rho);
 T_vert1 = thrust_aux(n_rpm(2), rho);
 T_vert2 = thrust_aux(n_rpm(3), rho);
@@ -139,10 +118,10 @@ tau = B_thr * T_vec;
 
 
 
-% 总输入力矩 = 主推进力矩 + 升阻力矩 + 横流阻力矩
-tau_out = tau + tau_liftdrag + tau_crossflow;
+% 总输入力矩 = 推进器推力 + CFD阻力
+tau_out = tau + tau_drag;
 
-% 状态方程
-xdot = [ Dnu_c + M \ (tau_out - C * nu_r - D * nu_r - g);
+% 状态方程（tau_out 已包含推力和阻力）
+xdot = [ Dnu_c + M \ (tau_out - C * nu_r - g);
     J * nu ];
 end
