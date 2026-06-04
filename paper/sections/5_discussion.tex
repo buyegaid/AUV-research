@@ -1,0 +1,19 @@
+\section{Discussion}
+
+\subsection{UCCO's Advantage Regime and Limitations}
+
+The experimental results converge on a central finding: EG-UCCO's advantage is most pronounced under \textbf{model mismatch}. Under ideal conditions (zero mismatch, zero noise), UCCO and the tuned EKF perform comparably (and UCCO may even trail slightly when dominated by sensor noise). However, once model mismatch is introduced, UCCO's robustness advantage emerges clearly. The physical origin lies in the gradient update mechanism's reduced sensitivity to model error compared to the EKF's Kalman gain: the EKF implicitly absorbs model mismatch into state estimates through the innovation covariance, whereas UCCO's gradient direction is affected by model error only at second order (through changes in the sensitivity matrix).
+
+UCCO's primary limitations include: (1) the absolute accuracy advantage under ideal sensors narrows under noise, with higher estimation variance; (2) a pre-calibrated CFD model is required---this paper relies on laboratory conditions, and deployed systems would need periodic model accuracy verification; (3) the excitation gate may remain closed during extended low-maneuver missions (e.g., long-distance straight-line cruising), during which the current estimate degrades to the GM prior.
+
+\subsection{Complementarity with ESO Methods}
+
+LESO and PIESO were included as baselines in our experiments, but their role is fundamentally different from UCCO's. ESO estimates a ``lumped disturbance'' (the sum of current, model error, and unmodeled dynamics), whose output is suitable for control compensation but lacks physical interpretability. UCCO estimates \emph{physical current parameters} $[c_N,c_E]^T$, which carry explicit physical meaning and can serve higher-level tasks such as environmental perception, flow field mapping, and path planning. These are complementary rather than competing approaches: ESO provides fast control compensation, while UCCO provides physical current perception at a higher semantic level.
+
+\subsection{Value and Generalizability of the CFD Prior}
+
+A central claim of this paper is the value of a CFD pre-calibrated model as a deterministic prior. Compared to the online recursive least squares identification approach of \cite{kim2018estimating}, pre-calibration avoids the inherent identifiability dilemma between parameter error and current effect. However, pre-calibration depends more heavily on model fidelity---if the actual AUV dynamics exhibit systematic deviations from the CFD model (e.g., long-term drag drift from biofouling), UCCO's absolute estimation accuracy will be affected. Our model mismatch experiments (0--30\% drag perturbation) provide initial evidence of UCCO's robustness to such deviations. In practice, a dual-layer architecture of ``offline CFD calibration + online UCCO estimation'' could be adopted, with periodic offline identification updating the CFD model parameters.
+
+\subsection{Deployment Considerations}
+
+EG-UCCO's computational complexity is moderate: each update requires 3 CFD model evaluations (baseline + 2 perturbations), with per-step computation time of approximately 2--3\,ms on the XHY AUV's embedded computer (NVIDIA Jetson), satisfying real-time requirements. During brief DVL outages, GM time propagation maintains the current estimate for approximately 30--60\,s (depending on $\tau_c$). Extended DVL outages cause the estimate to decay toward the prior mean, requiring a maneuvering period with DVL lock to restore accuracy.

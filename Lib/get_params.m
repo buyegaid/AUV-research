@@ -126,4 +126,44 @@ params.eso.z3_sat = 20; % adjust depending units (accels)
 params.pieso = params.eso;  % 继承标准ESO参数
 params.pieso.tau_c = 50;    % Gauss-Markov相关时间常数 (s)，对应低频海流
 
+%% EG-UCCO参数（激励门控不确定性标定海流观测器, 2026-06-04）
+params.ucco.tau_c = 100;          % GM海流相关时间常数 (s)
+params.ucco.c_mean = [0; 0];      % 海流均值 [cN; cE] (m/s)
+params.ucco.c_max = 1.5;          % 海流最大速度 (m/s)
+params.ucco.K_obs = 2.0;          % 观测器增益
+params.ucco.Q_c = 0.001;          % 海流过程噪声协方差
+params.ucco.R_inv_diag = [10, 10, 1, 1, 1, 1];  % 测量噪声逆（surge/sway高权重）
+params.ucco.window_size = 20;     % 滑动窗口大小（用于Gramian累积）
+params.ucco.gate_mu = 1e-8;       % 激励门控阈值（速度层面Gramian，dt倍数后很小）
+params.ucco.sens_pert = 0.01;     % 灵敏度数值扰动步长 (m/s)
+params.ucco.max_dc = 0.01;        % 单步最大海流更新量 (m/s)
+params.ucco.reg_lambda = 0.1;     % 正则化系数（防病态）
+params.ucco.accel_lpf_alpha = 0.3;% 加速度低通滤波系数
+params.ucco.conf_scale = 0.01;    % 置信度缩放
+% 模型不确定性分量化界（Δ_i = Δ_single + Δ_coupling + Δ_thruster + Δ_sensor）
+params.ucco.delta_single = [0.02; 0.05; 0.03; 0.01; 0.01; 0.01];  % 单自由度CFD残差界
+params.ucco.delta_coupling = [0.05; 0.03; 0.03; 0; 0.05; 0.05];   % 耦合项不确定性系数
+params.ucco.delta_thruster = 0.02;  % 推进器模型不确定性
+params.ucco.delta_sensor = 0.01;    % 传感器噪声界
+
+%% CFD-Augmented EKF参数（强基线, 2026-06-04）
+params.ekf.use_bias = true;       % 是否增广力偏置状态
+params.ekf.tau_c = 100;           % 海流GM时间常数
+params.ekf.tau_b = 50;            % 力偏置时间常数
+params.ekf.c_mean = [0; 0];       % 海流均值
+params.ekf.c_max = 1.5;           % 海流约束
+params.ekf.P0 = 0.1;              % 初始协方差
+params.ekf.Q_nu = 0.001;           % 速度过程噪声
+params.ekf.Q_c = 0.0005;           % 海流过程噪声
+params.ekf.Q_b = 0.0001;           % 偏置过程噪声
+params.ekf.Q0 = 0.001;            % 默认过程噪声
+params.ekf.R0 = 0.01;             % 测量噪声（(m/s)²）
+params.ekf.jac_pert = 0.001;      % Jacobian数值扰动
+
+%% 运动学海流观测器参数（Liang 2018基线, 2026-06-04）
+params.kin.K3 = 0.05;             % 海流估计增益（低通，对应慢收敛）
+params.kin.K4 = 1.0;              % 位置观测器增益
+params.kin.lpf_alpha = 0.9;       % 输出低通滤波系数
+params.kin.Vc_max = 1.5;          % 流速上限
+
 end

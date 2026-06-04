@@ -1,0 +1,98 @@
+\section{EG-UCCO Observer Design}
+
+The core idea of EG-UCCO is to perform one-step-ahead velocity prediction using the CFD-pre-calibrated dynamics model, map the prediction residual to a current estimate gradient via sensitivity analysis, and update only when the excitation condition is satisfied.
+
+\subsection{Velocity Prediction Architecture}
+
+The observer predicts the velocity at step $k+1$ using the current estimate $\hat{\bm{c}}_k$:
+
+\begin{equation}
+    \hat{\bm{\nu}}_{k+1|k} = \bm{\nu}_k + \Delta t \cdot \bm{a}_{\text{model}}(\bm{\nu}_k, \bm{\tau}_k, \hat{\bm{c}}_k)
+    \label{eq:prediction}
+\end{equation}
+
+where $\bm{a}_{\text{model}}$ is the acceleration computed from the CFD dynamics model. In contrast to acceleration-residual approaches, velocity prediction leverages the smoothing effect of time integration, avoiding direct measurement or differentiation of $\dot{\bm{\nu}}$---the latter yields a signal-to-noise ratio of only approximately 0.03 under typical DVL noise (0.01\,m/s) at 100\,Hz sampling, rendering gradient-based estimation impractical.
+
+\subsection{Sensitivity Analysis}
+
+Define the sensitivity matrix of the velocity prediction with respect to the current parameters:
+
+\begin{equation}
+    \bm{\Phi}_c = \frac{\partial \hat{\bm{\nu}}_{k+1|k}}{\partial \bm{c}} \in \R^{6\times 2}
+    \label{eq:sensitivity}
+\end{equation}
+
+Although the CFD drag model $\bm{D}(\bm{\nu}_r)$ admits closed-form partial derivatives (being quadratic in $\bm{\nu}_r$), the full 6-DOF analytical differentiation is cumbersome. We compute $\bm{\Phi}_c$ via numerical perturbation:
+
+\begin{equation}
+    \bm{\Phi}_c(:,j) = \frac{\hat{\bm{\nu}}_{k+1|k}(\hat{\bm{c}}+\delta\bm{e}_j) - \hat{\bm{\nu}}_{k+1|k}(\hat{\bm{c}})}{\delta}, \quad j=1,2
+    \label{eq:numerical_phi}
+\end{equation}
+
+with perturbation step $\delta=0.01$\,m/s and standard basis vectors $\bm{e}_j$. Each update requires 3 CFD model evaluations (1 baseline + 2 perturbations), which is computationally tractable.
+
+The sensitivity Gramian is defined as:
+
+\begin{equation}
+    \bm{W}_c = \bm{\Phi}_c^T\bm{\Phi}_c \in \R^{2\times 2}
+    \label{eq:gramian}
+\end{equation}
+
+$\bm{W}_c$ approximates the Fisher information matrix for current parameter estimation. Its minimum eigenvalue $\lambda_{\min}(\bm{W}_c)$ quantitatively characterizes the identifiability of current parameters under the current dynamic state.
+
+\subsection{Excitation Gate}
+
+\textbf{Identifiability analysis}: When the AUV is in steady straight-line motion ($r\approx 0$, $\dot{\bm{\nu}}\approx 0$), the current effect enters the dynamics primarily through the drag difference. In this regime, the sensitivity matrix is near-singular, $\lambda_{\min}(\bm{W}_c) \approx 0$, and $\bm{c}$ is not uniquely identifiable. Conversely, during maneuvers (turning $|r|>0$ or accelerating/decelerating $|\dot{u}|>0$), the Coriolis coupling and inertial terms provide additional identifiability information, increasing $\lambda_{\min}(\bm{W}_c)$ to identifiable levels.
+
+Based on this analysis, we design the excitation gate condition:
+
+\begin{equation}
+    \text{Update condition}: \quad \lambda_{\min}(\bm{W}_c) > \mu_{\text{gate}}
+    \label{eq:gate}
+\end{equation}
+
+where $\mu_{\text{gate}}=10^{-8}$ is the gating threshold. A low threshold ensures that normal maneuvers are not falsely blocked, while providing protection under high noise or weak excitation. The gate transforms the theoretical ``unidentifiability at steady state'' into a practical feature: update when needed, maintain when not.
+
+\textbf{GM time propagation}: When excitation is insufficient, the current estimate evolves according to a first-order Gauss-Markov process:
+
+\begin{equation}
+    \hat{\bm{c}}_{k+1} = e^{-\Delta t/\tau_c}\hat{\bm{c}}_k + (1-e^{-\Delta t/\tau_c})\bar{\bm{c}}
+    \label{eq:gm}
+\end{equation}
+
+where $\tau_c=100$\,s is the current correlation time constant and $\bar{\bm{c}}$ is the prior mean (typically zero). GM propagation prevents estimate divergence during DVL outages or extended straight-line segments.
+
+\subsection{Gradient Update Law}
+
+When the excitation condition is satisfied, the current estimate is updated via gradient descent:
+
+\begin{equation}
+    \hat{\bm{c}}_{k+1} = \hat{\bm{c}}_k + \gamma \cdot \frac{\bm{\Phi}_c^T \bm{e}_{\nu}}{1 + \lambda_{\min}(\bm{W}_c) \cdot \kappa}
+    \label{eq:update}
+\end{equation}
+
+where $\bm{e}_{\nu} = \bm{\nu}_{k+1}^{\text{meas}} - \hat{\bm{\nu}}_{k+1|k}$ is the velocity prediction innovation (surge and sway components only), $\gamma$ is the effective gain, and $\kappa$ is an adaptive regularization coefficient. The update magnitude is clipped to $\Delta c_{\max}=0.01$\,m/s per step to prevent overshoot.
+
+We choose the gradient direction $\bm{\Phi}_c^T\bm{e}_{\nu}$ over the Newton direction $(\bm{\Phi}_c^T\bm{\Phi}_c)^{-1}\bm{\Phi}_c^T\bm{e}_{\nu}$ for two reasons: (1) to avoid numerical instability when the Gramian is near-singular; (2) the gradient direction is more robust under model mismatch, as it does not amplify model errors through matrix inversion.
+
+\subsection{Stability Analysis (Sketch)}
+
+Define the Lyapunov candidate:
+
+\begin{equation}
+    V = \frac{1}{2}\tilde{\bm{\nu}}^T\bm{P}\tilde{\bm{\nu}} + \frac{1}{2\gamma_c}\|\tilde{\bm{c}}\|^2
+    \label{eq:lyapunov}
+\end{equation}
+
+where $\tilde{\bm{\nu}} = \bm{\nu} - \hat{\bm{\nu}}_{obs}$ is the state estimation error and $\tilde{\bm{c}} = \bm{c} - \hat{\bm{c}}$ is the current estimation error. Through analysis of $\dot{V}$, it can be shown that under CFD model error $\Delta\bm{D}$, the tracking error is uniformly ultimately bounded (UUB), with the error bound proportional to the uncertainty upper bound $\bar{\Delta}_D$. The complete Lyapunov derivation is provided in the Appendix.
+
+\subsection{Feedforward Compensation Strategy}
+
+The current estimate $\hat{\bm{c}}$ is ultimately used for feedforward compensation. Converting $\hat{\bm{c}}$ to body-frame current components, the net force/moment induced by the current is:
+
+\begin{equation}
+    \hat{\bm{d}} = \bm{M}\left[\dot{\bm{\nu}}(\hat{\bm{c}}) - \dot{\bm{\nu}}(\bm{0})\right]
+    \label{eq:feedforward}
+\end{equation}
+
+\textbf{Compensation ablation discovery}: During tests injecting individual components of $\hat{\bm{d}}$ into the SMC control law, we discovered an important coupling phenomenon---surge feedforward compensation (\texttt{hat\_d(1)}) severely degrades heading control, worsening heading RMSE from 0.14\,rad to 0.93\,rad (surge-only compensation). The root cause is that main thruster RPM changes indirectly affect yaw moment through the thrust allocation matrix in the XHY AUV's 5-thruster configuration, creating a surge-yaw dynamic coupling. Based on this finding, EG-UCCO employs a \textbf{yaw-only feedforward} strategy: only $\hat{\bm{d}}(6)$ (yaw moment compensation) is injected into the control law, while the surge channel is handled independently by the speed PID controller. This design choice, validated as optimal through ablation experiments, is motivated by engineering practicality and avoids cross-channel coupling.

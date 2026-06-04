@@ -6,11 +6,13 @@ function T = thrust_aux(n, rho)
 % 输出:
 %   T   - 推力 (N)
 %
-% TODO: KT_fwd/KT_rev为模拟数值，需要通过水池推力试验标定实际KT曲线
+% KT_fwd/KT_rev为CFD阻力校准值（2026-06-03更新）
+%   校准依据: 水池试验稳态 2×2500RPM→0.34m/s, CFD阻力=15.11N
+%   KT = F_drag / (2 * rho * D^4 * n^2)
 
 D_prop = 0.06;      % 辅助推直径 6cm
-KT_fwd = 0.22;      % 正向推力系数（正转，n>0）
-KT_rev = 0.22;      % 反向推力系数（反转，n<0，TODO: 需试验测定）
+KT_fwd = 0.327;     % 正向推力系数（CFD阻力校准, 原0.22）
+KT_rev = 0.327;     % 反向推力系数（无反向数据, 暂取与正向相同）
 
 n_rps = n / 60;     % rpm → rps
 if n >= 0
