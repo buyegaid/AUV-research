@@ -2,7 +2,7 @@
 
 This file provides guidance to Codex (Codex.ai/code) when working with code in this repository.
 
-> **当前线程：海流扰动观测与物理模型** | 切换：`/worktree eso`
+> **当前线程：控制方法研究** | 切换：`/worktree control`
 
 ## 工作目录
 
@@ -28,28 +28,40 @@ addpath('.', './Lib', './guidance', './controller/xhy', './controller/remus', '.
 
 ---
 
-## 线程 3：海流扰动观测与物理模型
+## 线程 2：控制方法研究
 
-### 标准 ESO（`eso/vec_leso_update_adv.m`）
+### XHY 平台（5 推进器推力分配）
 
-- 6-DOF 线性扩展状态观测器，自适应带宽（omega0_base → omega0_max）
-- Z3 状态估计总扰动（含海流 + 模型不确定性），前馈补偿到 SMC 控制律
+- 4 通道 SMC 控制器：`smc_surge_xhy`（纵荡）、`smc_yaw_xhy`（转艏）、`smc_pitch_xhy`（俯仰）、`smc_heave_xhy`（垂荡）
+- 深度控制双模式：`DepthMode=1`（俯仰角控深）vs `DepthMode=2`（直接 Z 力控深）
+- Station-keeping 定点控制测试：`run_sk.m`、`run_sk_omega0.m`、`run_sk_tauc.m` 等
 
-### 物理信息 ESO / PI-ESO（`eso/vec_pieso_update.m`）
+### REMUS 平台（舵面控制，方法验证）
 
-- 在标准 ESO 中嵌入 Gauss-Markov 海流模型：`Z3_dot = -Λ·Z3 + β3·fal(e)`，Λ = 1/τ_c
-- τ_c 为海流相关时间常数（典型值 50-100s），体现低频海流的时间持续性
-- 支持 RK4 积分、自适应带宽、Z3 低通滤波和饱和限制
-- `xhy_simulator.m` 已集成：`usePIESO=1` 切换 PI-ESO
+- SMC/ISMC/SMC+ESO 三种方法对比框架
+- 3D ALOS 制导 + 航向/俯仰/速度三通道控制
 
-### Gauss-Markov 海流模型（`model/gauss_markov_current.m`）
+### 控制器参数调整
 
-- 4 种海流场景：均匀恒定流 / GM 缓变流 / 深度剪切流 / 空间相关流场
-- 用于仿真验证 ESO/PI-ESO 对不同海流特性的估计能力
+- ALOS 自适应增益 `gamma_h/gamma_v` 从 0.002 → 0（关闭自适应，由 ESO 补偿海流）
+- SMC 纵荡通道从 d1/d2 参数化 → T1 时间常数参数化
 
-### ESO 诊断
+### XHY 单通道 SMC 控制器接口
 
-ESO 诊断通过 `vec_leso_update_adv` 的第二个返回值 `aux`：`aux.e`（误差）、`aux.omega0`（自适应带宽）、`aux.z3_filt`（滤波后扰动估计）。
+所有控制器使用 `persistent` 变量保存积分状态，**切换仿真前必须 `clear` 对应函数**（`xhy_simulator.m:6` 已处理）。
+
+| 控制器 | 输入 | 输出 | 关键参数 |
+|--------|------|------|----------|
+| `smc_surge_xhy` | u, u_d, u_d_dot | X (N) | m_eff, T1, lambda, Kd, Ks（T1 时间常数参数化） |
+| `smc_yaw_xhy` | psi, r, psi_d, r_d | N (N·m) | Iz_eff, lambda, Kd, Ks |
+| `smc_pitch_xhy` | theta, q, theta_d, q_d | M (N·m) | Iy_eff, lambda, Kd, Ks |
+| `smc_heave_xhy` | zn, w, z_d, w_d | Z (N) | m_eff_z, d_w, g_z |
+
+### 深度控制模式（XHY）
+
+在 `xhy_simulator.m` 中修改 `DepthMode`：
+- `DepthMode = 1` — 俯仰角控深：ALOS → theta_ref → SMC pitch → M 力矩
+- `DepthMode = 2` — 直接 Z 力控深：深度误差 → SMC heave → Z 力（俯仰保持水平）
 
 ---
 
@@ -79,11 +91,6 @@ compare_results(hist_smc, hist_eso, 'SMC vs SMC+ESO');
                                   ↑
                     ESO/PI-ESO 扰动估计（hat_d = M * Z(:,3)）
 ```
-
-**两种 ESO 模式（`xhy_simulator.m`）：**
-- `useESO=0`：不使用 ESO，纯 SMC 控制
-- `useESO=1` + `usePIESO=0`：标准 LESO（`vec_leso_update_adv`），无海流先验
-- `useESO=1` + `usePIESO=1`：物理信息 ESO（`vec_pieso_update`），嵌入 Gauss-Markov 海流模型
 
 **ESO 补偿方式：**
 ```matlab
