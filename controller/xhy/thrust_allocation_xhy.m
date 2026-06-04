@@ -70,15 +70,8 @@ D_arr  = [params.D_prop_main; params.D_prop_aux; params.D_prop_aux; params.D_pro
 KT_fwd_arr = [params.KT_main_fwd; params.KT_aux_fwd; params.KT_aux_fwd; params.KT_aux_fwd; params.KT_aux_fwd];
 KT_rev_arr = [params.KT_main_rev; params.KT_aux_rev; params.KT_aux_rev; params.KT_aux_rev; params.KT_aux_rev];
 
-% 推力分配矩阵
-B_thr = [
-    1,  0,                  0,                  0,                0;
-    0,  0,                  0,                  1,                1;
-    0,  1,                  1,                  0,                0;
-    0,  0,                  0,                  0,                0;
-    0, -params.x_vert_f,   -params.x_vert_r,    0,                0;
-    0,  0,                  0,                  params.x_side_f,  params.x_side_r
-    ];
+% 推力分配矩阵（统一来源，消除重复定义）
+	[B_thr, pos] = xhy_thruster_geometry();
 
 % 横滚通道不可控，移除第4行
 B_actuated = B_thr([1 2 3 5 6], :);  % 5x5矩阵
