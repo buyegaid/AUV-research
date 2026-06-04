@@ -1,0 +1,70 @@
+\section{问题描述}
+
+\subsection{AUV动力学模型}
+
+考虑XHY AUV的6自由度动力学方程，采用Fossen的向量化表述\cite{fossen2011handbook}：
+
+\begin{equation}
+    \bm{M}\dot{\bm{\nu}} + \bm{C}(\bm{\nu}_r)\bm{\nu}_r + \bm{D}(\bm{\nu}_r)\bm{\nu}_r + \bm{g}(\bm{\eta}) = \bm{\tau}
+    \label{eq:dynamics}
+\end{equation}
+
+其中$\bm{\nu}=[u,v,w,p,q,r]^T$为船体坐标系下的速度向量，$\bm{\eta}=[x,y,z,\phi,\theta,\psi]^T$为NED惯性系下的位置和姿态向量。$\bm{M}=\bm{M}_{RB}+\bm{M}_A$为刚体惯性矩阵与附加质量矩阵之和，$\bm{C}(\bm{\nu}_r)$为Coriolis向心力矩阵，$\bm{D}(\bm{\nu}_r)$为水动力阻尼矩阵，$\bm{g}(\bm{\eta})$为重力/浮力恢复力向量，$\bm{\tau}$为推进器产生的控制力/力矩。
+
+\subsection{海流的参数化形式}
+
+海流以相对速度的形式进入动力学方程。定义船体坐标系下的海流速度分量为：
+
+\begin{equation}
+    \bm{\nu}_c = \begin{bmatrix}
+        V_c\cos(\beta_c-\psi) \\ V_c\sin(\beta_c-\psi) \\ w_c \\ 0 \\ 0 \\ 0
+    \end{bmatrix}
+    \label{eq:nuc}
+\end{equation}
+
+其中$V_c$为海流速度幅值，$\beta_c$为海流来向角（海洋学惯例），$\psi$为AUV航向角。相对速度定义为$\bm{\nu}_r = \bm{\nu} - \bm{\nu}_c$。此外，海流还会在船体坐标系中产生一个显式的Coriolis类耦合项$\bm{D}_{\nu_c} = [r\cdot v_c, -r\cdot u_c, 0, 0, 0, 0]^T$。
+
+为避免$V_c\approx 0$时方向角的奇异性，本文直接估计惯性系水平海流分量：
+
+\begin{equation}
+    \bm{c} = \begin{bmatrix} c_N \\ c_E \end{bmatrix} = \begin{bmatrix} V_c\cos\beta_c \\ V_c\sin\beta_c \end{bmatrix}
+    \label{eq:c_inertial}
+\end{equation}
+
+船体系海流分量可通过坐标变换获得：$u_c = c_N\cos\psi + c_E\sin\psi$，$v_c = -c_N\sin\psi + c_E\cos\psi$。
+
+\subsection{CFD预标定阻力模型}
+
+XHY AUV的阻力模型通过Fluent RANS仿真（$k$-$\omega$ SST湍流模型）进行标定。各自由度的阻力系数与拟合优度如表\ref{tab:cfd}所示。
+
+\begin{table}[h]
+\centering
+\caption{CFD标定阻力系数与拟合精度}
+\label{tab:cfd}
+\begin{tabular}{lccc}
+\toprule
+自由度 & 线性系数$d_1$ & 二次系数$d_2$ & $R^2$ \\
+\midrule
+Surge (X)  & 0.7580  & 3.7729   & 0.99991 \\
+Sway (Y)   & 0.0     & 130.7023 & 0.99757 \\
+Heave (Z)  & 1.4485  & 45.0442  & 0.99865 \\
+Pitch (M)  & 0.001345 & 0.00453 & 0.99997 \\
+Yaw (N)    & 0.027322 & 0.067903 & 0.99986 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+需要强调的是，上述$R^2$值反映的是单自由度CFD仿真数据对二次阻力模型的拟合优度，而非6自由度耦合运动的全局模型精度。实际的模型误差$\Delta\bm{D}$包括：(1) 单自由度CFD本身的残差噪声；(2) 斜航、转弯等耦合工况的未建模效应；(3) 推进器-船体干扰；(4) 制造公差导致的几何偏差。本文将CFD模型表述为名义模型加有界不确定性：
+
+\begin{equation}
+    \bm{D}(\bm{\nu}_r) = \bm{D}_{\text{nom}}(\bm{\nu}_r) + \Delta\bm{D}(\bm{\nu}_r), \quad \|\Delta\bm{D}\| \leq \bar{\Delta}_D
+    \label{eq:uncertainty}
+\end{equation}
+
+其中不确定性界$\bar{\Delta}_D$通过静水拖曳试验的残差统计和CFD网格收敛性分析进行保守估计。
+
+\subsection{传感器配置与问题陈述}
+
+XHY AUV配备以下导航传感器：惯性导航系统(INS，100Hz)提供姿态和角速度，多普勒测速仪(DVL，4Hz)提供对地速度，深度计(10Hz)提供深度信息。完整的导航方案可提供$\bm{\nu}$和$\bm{\eta}$的全状态估计。
+
+\textbf{问题}：给定控制输入$\bm{\tau}$、状态测量$\bm{\nu},\bm{\eta}$、CFD标定的名义阻力模型$\bm{D}_{\text{nom}}$及其不确定性界$\bar{\Delta}_D$，设计观测器实时估计惯性系海流分量$\bm{c}=[c_N,c_E]^T$，使得估计误差在模型失配下保持有界。

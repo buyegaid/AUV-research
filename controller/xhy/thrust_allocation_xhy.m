@@ -39,15 +39,27 @@ if nargin < 2
     params.rho = 1026;
     params.D_prop_main = 0.10;
     params.D_prop_aux  = 0.06;
-    params.KT_main_fwd = 0.019;
-    params.KT_main_rev = 0.013;
-    params.KT_aux_fwd  = 0.22;
-    params.KT_aux_rev  = 0.22;
+    params.KT_main_fwd = 0.0293;   % CFD阻力校准 (2026-06-03)
+    params.KT_main_rev = 0.0201;   % 同比缩放
+    params.KT_aux_fwd  = 0.327;    % CFD阻力校准 (2026-06-03)
+    params.KT_aux_rev  = 0.327;    % 无反向数据, 暂取与正向相同
     params.n_max = 2500;
     params.x_vert_f = +0.344;
     params.x_vert_r = -0.293;
     params.x_side_f = +0.424;
     params.x_side_r = -0.376;
+end
+
+% 向后兼容旧版thr_params（仅有KT/D_prop单一值）
+if ~isfield(params, 'KT_main_fwd') && isfield(params, 'KT')
+    params.KT_main_fwd = params.KT;
+    params.KT_main_rev = params.KT;
+    params.KT_aux_fwd  = params.KT;
+    params.KT_aux_rev  = params.KT;
+end
+if ~isfield(params, 'D_prop_main') && isfield(params, 'D_prop')
+    params.D_prop_main = params.D_prop;
+    params.D_prop_aux  = params.D_prop;
 end
 
 rho = params.rho;
