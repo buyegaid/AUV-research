@@ -1,0 +1,38 @@
+\begin{thebibliography}{1}
+
+\bibitem{fossen2011handbook}
+Thor~I. Fossen.
+\newblock {\em Handbook of Marine Craft Hydrodynamics and Motion Control}.
+\newblock John Wiley \& Sons, 2011.
+
+\bibitem{borhaug2007model}
+Even B{\o}rhaug, Luca Pivano, Kristin~Y. Pettersen, and Tor~Arne Johansen.
+\newblock A model-based ocean current observer for {6DOF} underwater vehicles.
+\newblock In {\em IFAC Conference on Control Applications in Marine Systems
+  (CAMS)}, 2007.
+
+\bibitem{liang2018three}
+Xiao Liang, Xingru Qu, Yuanhang Hou, and Qiang Ma.
+\newblock Three-dimensional trajectory tracking control of an underactuated
+  autonomous underwater vehicle based on ocean current observer.
+\newblock {\em International Journal of Advanced Robotic Systems}, 15(5), 2018.
+
+\bibitem{he2024three}
+Long He, Ya~Zhang, Shizhong Li, Bo~Li, and Zeihui Yuan.
+\newblock Three-dimensional path following control for underactuated {AUV}
+  based on ocean current observer.
+\newblock {\em Drones}, 8(11):672, 2024.
+
+\bibitem{xie2020extended}
+Shaolong Xie, Xiaoming Wang, et~al.
+\newblock Extended state observer-based robust control of {6-DoF} autonomous
+  hovering underwater vehicles.
+\newblock {\em IEEE Access}, 2020.
+
+\bibitem{kim2018estimating}
+Eonjoo Kim, Shuangshuang Fan, and Neil Bose.
+\newblock Estimating water current velocities by using a model-based high-gain
+  observer for an autonomous underwater vehicle.
+\newblock {\em IEEE Access}, 6:70259--70271, 2018.
+
+\end{thebibliography}

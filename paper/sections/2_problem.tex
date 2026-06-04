@@ -1,0 +1,70 @@
+\section{Problem Formulation}
+
+\subsection{AUV Dynamics Model}
+
+Consider the 6-DOF dynamics of the XHY AUV in Fossen's vectorial formulation \cite{fossen2011handbook}:
+
+\begin{equation}
+    \bm{M}\dot{\bm{\nu}} + \bm{C}(\bm{\nu}_r)\bm{\nu}_r + \bm{D}(\bm{\nu}_r)\bm{\nu}_r + \bm{g}(\bm{\eta}) = \bm{\tau}
+    \label{eq:dynamics}
+\end{equation}
+
+where $\bm{\nu}=[u,v,w,p,q,r]^T$ is the body-fixed velocity vector, $\bm{\eta}=[x,y,z,\phi,\theta,\psi]^T$ is the NED position and attitude vector. $\bm{M}=\bm{M}_{RB}+\bm{M}_A$ combines rigid-body and added-mass inertia, $\bm{C}(\bm{\nu}_r)$ is the Coriolis-centripetal matrix, $\bm{D}(\bm{\nu}_r)$ is the hydrodynamic damping matrix, $\bm{g}(\bm{\eta})$ is the gravitational/buoyancy restoring force vector, and $\bm{\tau}$ is the thruster-produced control force/moment.
+
+\subsection{Ocean Current Parameterization}
+
+Ocean current enters the dynamics through the relative velocity formulation. The body-fixed current velocity is:
+
+\begin{equation}
+    \bm{\nu}_c = \begin{bmatrix}
+        V_c\cos(\beta_c-\psi) \\ V_c\sin(\beta_c-\psi) \\ w_c \\ 0 \\ 0 \\ 0
+    \end{bmatrix}
+    \label{eq:nuc}
+\end{equation}
+
+where $V_c$ is the current speed, $\beta_c$ is the current direction (oceanographic convention, direction \emph{from} which it flows), and $\psi$ is the AUV heading. The relative velocity is $\bm{\nu}_r = \bm{\nu} - \bm{\nu}_c$. Additionally, current induces an explicit Coriolis-like coupling term $\bm{D}_{\nu_c} = [r\cdot v_c, -r\cdot u_c, 0, 0, 0, 0]^T$.
+
+To avoid the singularity of direction angle when $V_c\approx 0$, we directly estimate the inertial-frame horizontal current components:
+
+\begin{equation}
+    \bm{c} = \begin{bmatrix} c_N \\ c_E \end{bmatrix} = \begin{bmatrix} V_c\cos\beta_c \\ V_c\sin\beta_c \end{bmatrix}
+    \label{eq:c_inertial}
+\end{equation}
+
+Body-frame components follow from coordinate transformation: $u_c = c_N\cos\psi + c_E\sin\psi$, $v_c = -c_N\sin\psi + c_E\cos\psi$.
+
+\subsection{CFD Pre-Calibrated Drag Model}
+
+The XHY AUV's drag model is calibrated through Fluent RANS simulations ($k$-$\omega$ SST turbulence model). Per-DOF drag coefficients and fit quality are listed in Table~\ref{tab:cfd}.
+
+\begin{table}[h]
+\centering
+\caption{CFD-calibrated drag coefficients and fit quality}
+\label{tab:cfd}
+\begin{tabular}{lccc}
+\toprule
+DOF & Linear $d_1$ & Quadratic $d_2$ & $R^2$ \\
+\midrule
+Surge (X)  & 0.7580  & 3.7729   & 0.99991 \\
+Sway (Y)   & 0.0     & 130.7023 & 0.99757 \\
+Heave (Z)  & 1.4485  & 45.0442  & 0.99865 \\
+Pitch (M)  & 0.001345 & 0.00453 & 0.99997 \\
+Yaw (N)    & 0.027322 & 0.067903 & 0.99986 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+It is important to note that the above $R^2$ values reflect single-DOF CFD data fit quality, not global 6-DOF coupled model accuracy. Actual model error $\Delta\bm{D}$ includes: (1) residual noise of single-DOF CFD; (2) unmodeled coupling effects in oblique-tow and turning conditions; (3) thruster-hull interaction; (4) geometric deviations from manufacturing tolerances. We characterize the CFD model as a nominal model plus bounded uncertainty:
+
+\begin{equation}
+    \bm{D}(\bm{\nu}_r) = \bm{D}_{\text{nom}}(\bm{\nu}_r) + \Delta\bm{D}(\bm{\nu}_r), \quad \|\Delta\bm{D}\| \leq \bar{\Delta}_D
+    \label{eq:uncertainty}
+\end{equation}
+
+where the uncertainty bound $\bar{\Delta}_D$ is conservatively estimated from still-water towing residual statistics and CFD grid convergence analysis.
+
+\subsection{Sensor Suite and Problem Statement}
+
+The XHY AUV is equipped with: an inertial navigation system (INS, 100\,Hz) providing attitude and angular rates; a Doppler velocity log (DVL, 4\,Hz) providing ground-referenced velocity; and a depth sensor (10\,Hz). The full navigation solution yields estimates of $\bm{\nu}$ and $\bm{\eta}$.
+
+\textbf{Problem}: Given control input $\bm{\tau}$, state measurements $\bm{\nu},\bm{\eta}$, the CFD-calibrated nominal drag model $\bm{D}_{\text{nom}}$ and its uncertainty bound $\bar{\Delta}_D$, design an observer to estimate in real time the inertial current components $\bm{c}=[c_N,c_E]^T$, such that the estimation error remains bounded under model mismatch.

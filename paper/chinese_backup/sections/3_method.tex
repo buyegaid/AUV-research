@@ -1,0 +1,115 @@
+\section{EG-UCCO观测器设计}
+
+EG-UCCO的核心思想是利用CFD预标定的动力学模型进行一步前向速度预测，将预测值与DVL实测速度的残差通过灵敏度分析映射为海流估计的梯度方向，并在激励条件满足时进行更新。图\ref{fig:architecture}给出了EG-UCCO的整体架构。
+
+\begin{figure}[t]
+\centering
+\fbox{\parbox{0.9\textwidth}{
+\textbf{EG-UCCO架构:}
+
+$\bm{\tau}$(推力) $\rightarrow$ [名义模型 $\hat{\bm{\nu}}_{nom}$, CFD, $V_c$=0] $\rightarrow$ 模型残差 $\rightarrow$ [观测器模型 $\hat{\bm{\nu}}_{obs}$, CFD, $\hat{\bm{c}}$] $\leftarrow$ $\bm{\nu}_{meas}$(DVL)
+
+$\rightarrow$ 速度新息 $\bm{e} = \bm{\nu}_{meas} - \hat{\bm{\nu}}_{pred}$ $\rightarrow$ [灵敏度 $\bm{\Phi}_c = \partial\hat{\bm{\nu}}_{pred}/\partial\bm{c}$] $\rightarrow$ [Gramian门控: $\lambda_{min}(\bm{W}_c) > \mu$?]
+
+YES $\rightarrow$ [梯度更新 $\Delta\hat{\bm{c}} = \gamma\bm{\Phi}_c^T\bm{e}$] $\rightarrow$ $\hat{\bm{c}} \rightarrow$ [Yaw前馈补偿]
+
+NO $\rightarrow$ [GM时间传播 $\hat{\bm{c}} \leftarrow \alpha\hat{\bm{c}}+(1-\alpha)\bar{\bm{c}}$]
+}}
+\caption{EG-UCCO整体架构}
+\label{fig:architecture}
+\end{figure}
+
+\subsection{速度预测架构}
+
+观测器在第$k$步使用当前海流估计$\hat{\bm{c}}_k$对$k+1$步的速度进行一步前向预测：
+
+\begin{equation}
+    \hat{\bm{\nu}}_{k+1|k} = \bm{\nu}_k + \Delta t \cdot \bm{a}_{\text{model}}(\bm{\nu}_k, \bm{\tau}_k, \hat{\bm{c}}_k)
+    \label{eq:prediction}
+\end{equation}
+
+其中$\bm{a}_{\text{model}}$为CFD动力学模型计算的加速度。与加速度残差方案不同，速度预测利用的是时间积分的平滑效应，避免了对$\dot{\bm{\nu}}$的直接测量或差分——后者在典型DVL噪声水平(0.01 m/s)和100Hz采样率下的信噪比仅约0.03，难以用于梯度估计。
+
+\subsection{灵敏度分析}
+
+定义速度预测对海流参数的灵敏度矩阵：
+
+\begin{equation}
+    \bm{\Phi}_c = \frac{\partial \hat{\bm{\nu}}_{k+1|k}}{\partial \bm{c}} \in \R^{6\times 2}
+    \label{eq:sensitivity}
+\end{equation}
+
+由于CFD阻力模型$\bm{D}(\bm{\nu}_r)$具有解析的二次形式，其对$\bm{c}$的偏导数存在闭合形式。然而，完整6自由度动力学方程的解析求导较为繁琐。本文采用数值扰动法计算$\bm{\Phi}_c$：
+
+\begin{equation}
+    \bm{\Phi}_c(:,j) = \frac{\hat{\bm{\nu}}_{k+1|k}(\hat{\bm{c}}+\delta\bm{e}_j) - \hat{\bm{\nu}}_{k+1|k}(\hat{\bm{c}})}{\delta}, \quad j=1,2
+    \label{eq:numerical_phi}
+\end{equation}
+
+其中$\delta=0.01$ m/s为扰动步长，$\bm{e}_j$为单位向量。每次更新需要3次CFD模型前向计算（1次基准+2次扰动），计算开销可控。
+
+定义灵敏度Gramian矩阵：
+
+\begin{equation}
+    \bm{W}_c = \bm{\Phi}_c^T\bm{\Phi}_c \in \R^{2\times 2}
+    \label{eq:gramian}
+\end{equation}
+
+$\bm{W}_c$本质上近似了海流参数估计的Fisher信息矩阵。其最小特征值$\lambda_{\min}(\bm{W}_c)$定量刻画了当前动力学状态下海流参数的可辨识程度。
+
+\subsection{激励门控机制}
+
+\textbf{可辨识性分析}：当AUV处于稳态直航时($r\approx 0$，$\dot{\bm{\nu}}\approx 0$)，海流效应主要通过阻力差异进入动力学。此时灵敏度矩阵接近奇异，$\lambda_{\min}(\bm{W}_c) \approx 0$，$\bm{c}$不可唯一辨识。而当AUV处于机动状态时（转弯$|r|>0$或加减速$|\dot{u}|>0$），Coriolis耦合项和惯性项提供了额外的辨识信息，$\lambda_{\min}(\bm{W}_c)$增大到可辨识水平。
+
+基于上述分析，设计激励门控条件：
+
+\begin{equation}
+    \text{更新条件}: \quad \lambda_{\min}(\bm{W}_c) > \mu_{\text{gate}}
+    \label{eq:gate}
+\end{equation}
+
+其中$\mu_{\text{gate}}=10^{-8}$为门控阈值。设置较低的门控阈值确保正常机动时不会误阻断更新，同时在高噪声、弱激励时为估计提供保护。门控机制将"稳态不可辨识"这一理论缺陷转化为实用特性：在需要时才更新，不需要时自动维持。
+
+\textbf{GM时间传播}：当激励不足时，海流估计按一阶Gauss-Markov过程进行时间传播：
+
+\begin{equation}
+    \hat{\bm{c}}_{k+1} = e^{-\Delta t/\tau_c}\hat{\bm{c}}_k + (1-e^{-\Delta t/\tau_c})\bar{\bm{c}}
+    \label{eq:gm}
+\end{equation}
+
+其中$\tau_c=100$s为海流相关时间常数，$\bar{\bm{c}}$为海流均值（通常取零或先验值）。GM传播确保在DVL短暂失效或长时直航段期间，海流估计不会发散。
+
+\subsection{梯度更新律}
+
+当激励条件满足时，采用梯度下降更新海流估计：
+
+\begin{equation}
+    \hat{\bm{c}}_{k+1} = \hat{\bm{c}}_k + \gamma \cdot \frac{\bm{\Phi}_c^T \bm{e}_{\nu}}{1 + \lambda_{\min}(\bm{W}_c) \cdot \kappa}
+    \label{eq:update}
+\end{equation}
+
+其中$\bm{e}_{\nu} = \bm{\nu}_{k+1}^{\text{meas}} - \hat{\bm{\nu}}_{k+1|k}$为速度预测新息（仅取surge和sway分量），$\gamma$为有效增益，$\kappa$为自适应正则化系数。更新量被限制在单步最大变化量$\Delta c_{\max}=0.01$ m/s以内，防止单步过冲。
+
+选择梯度方向$\bm{\Phi}_c^T\bm{e}_{\nu}$而非牛顿方向$(\bm{\Phi}_c^T\bm{\Phi}_c)^{-1}\bm{\Phi}_c^T\bm{e}_{\nu}$的理由是：(1) 避免Gramian接近奇异时的数值不稳定；(2) 梯度方向在模型失配下更加鲁棒，不会因模型误差产生过大的参数跳变。
+
+\subsection{稳定性分析（概述）}
+
+定义Lyapunov候选函数：
+
+\begin{equation}
+    V = \frac{1}{2}\tilde{\bm{\nu}}^T\bm{P}\tilde{\bm{\nu}} + \frac{1}{2\gamma_c}\|\tilde{\bm{c}}\|^2
+    \label{eq:lyapunov}
+\end{equation}
+
+其中$\tilde{\bm{\nu}} = \bm{\nu} - \hat{\bm{\nu}}_{obs}$为状态估计误差，$\tilde{\bm{c}} = \bm{c} - \hat{\bm{c}}$为海流估计误差。通过对$\dot{V}$的分析，可以证明在CFD模型误差$\Delta\bm{D}$存在下，跟踪误差具有一致最终有界性(UUB)，误差界与不确定性上界$\bar{\Delta}_D$成正比。完整的Lyapunov推导见附录。
+
+\subsection{前馈补偿策略}
+
+海流估计$\hat{\bm{c}}$最终用于前馈补偿。将$\hat{\bm{c}}$转化为船体坐标系下的海流分量，计算海流引起的净力/力矩效应：
+
+\begin{equation}
+    \hat{\bm{d}} = \bm{M}\left[\dot{\bm{\nu}}(\hat{\bm{c}}) - \dot{\bm{\nu}}(\bm{0})\right]
+    \label{eq:feedforward}
+\end{equation}
+
+\textbf{补偿消融实验的发现}：在将$\hat{\bm{d}}$的各分量分别注入SMC控制律的测试中，我们发现了一个重要的耦合现象——Surge方向的前馈补偿(\texttt{hat\_d(1)})会严重损害航向控制，导致航向RMSE从0.14 rad恶化至0.93 rad（仅Surge补偿时）。根因在于XHY AUV的推进器配置中，主推转速变化通过推力分配间接影响偏航力矩，形成了Surge-Yaw通道的动力学耦合。基于此发现，EG-UCCO采用\textbf{仅Yaw前馈}策略：仅将$\hat{\bm{d}}(6)$（偏航力矩补偿）注入控制律，Surge通道由速度PID独立处理。这一设计选择是工程实践导向的，避免了通道间耦合，且经实验验证为最优配置。
