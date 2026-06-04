@@ -58,9 +58,11 @@ m=33;                      % 质量(kg)
 Ix=0.540804;               % 绕x轴转动惯量(kg*m^2)
 Iy=2.107488;               % 绕y轴转动惯量(kg*m^2)
 Iz=1.849137;               % 绕z轴转动惯量(kg*m^2)
+
 Ig = diag([Ix Iy Iz]);
 MRB=diag([ m m m Ix Iy Iz ]);
 MA=diag([ 11.2773 132.1086 47.104 0.006 0.043 0.138 ]);
+
 nu_2 = nu(4:6);
 O3 = zeros(3,3);
 CRB = [ m * Smtrx(nu_2)    O3
@@ -74,10 +76,10 @@ C = CRB + CA;
 M = MRB + MA;
 
 W = m * g_mu;
-B = W*1.01; % 轻微正浮力
+B = W; % 零浮力
 
 % 计算阻力（基于CFD仿真数据）
-[tau_drag, D] = xhy_drag_cfd(nu_r, M);
+[tau_drag, D] = xhy_drag_cfd(nu_r);
 
 % 运动学和重力/浮力矩阵
 [J,R] = eulerang(x(10), x(11), x(12));

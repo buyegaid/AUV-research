@@ -1,4 +1,4 @@
-function [tau_drag, D] = xhy_drag_cfd(nu_r, M)
+function [tau_drag, D] = xhy_drag_cfd(nu_r)
 % XHY_DRAG_CFD 阻力计算（CFD RANS 计算, 2026-06-03 更新）
 %   平动阻力: Fluent 直航/斜航 CFD, k-ω SST
 %   转动阻尼: Fluent MRF Wall Motion CFD, k-ω SST

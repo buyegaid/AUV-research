@@ -1,24 +1,30 @@
-% Test script for XHY AUV dynamics model
-% Simulates 100 seconds with fixed thruster inputs
-% Plots trajectory, attitude, and process variables
+% XHY AUV 动力学模型测试
+% 使用实物推进器配置: 主推 M080, 辅推 M060, 输入为 PWM 脉宽和供电电压。
+% 通过 m080_thruster_model / m060_thruster_model 计算推力后驱动 XHY 动力学。
 
 clear all; close all; clc;
 
-% Add path to access xhy function
-addpath('.', './Lib', './guidance', './controller/xhy', './controller/remus', './model', './eso', './post', './traj');
+script_dir = fileparts(mfilename('fullpath'));
+project_root = fullfile(script_dir, '..', '..');
+addpath(project_root, fullfile(project_root, 'Lib'), fullfile(project_root, 'guidance'), ...
+    fullfile(project_root, 'controller', 'xhy'), fullfile(project_root, 'controller', 'remus'), ...
+    fullfile(project_root, 'model'), fullfile(project_root, 'model', 'params'), ...
+    fullfile(project_root, 'model', 'test'), fullfile(project_root, 'eso'), ...
+    fullfile(project_root, 'post'), fullfile(project_root, 'traj'));
 
 % Simulation parameters
 tspan = [0 100];  % 100 seconds
 dt = 0.1;         % time step
 t = tspan(1):dt:tspan(2);
+voltage_v = 24;
 
 % Initial state: [u v w p q r x y z phi theta psi]'
 x0 = zeros(12,1);
 x0(12) = 0;  % initial yaw angle (rad)
 
-% Fixed thruster inputs (RPM)
-% ui = [n_main, n_vert1, n_vert2, n_side1, n_side2]'
-ui_fixed = [1000; 500; 500; 200; 200];  % example fixed inputs
+% 固定推进器输入 PWM(us)
+% 顺序: [M080主推, M060前垂推, M060后垂推, M060前侧推, M060后侧推]'
+pwm_fixed_us = [1650; 1500; 1500; 1600; 1600];
 
 % Ocean currents (optional, set to zero)
 Vc = 0;
@@ -26,7 +32,7 @@ betaVc = 0;
 w_c = 0;
 
 % ODE function handle
-ode_fun = @(t, x) xhy_ode(t, x, ui_fixed, Vc, betaVc, w_c);
+ode_fun = @(t, x) xhy_ode(t, x, pwm_fixed_us, voltage_v, Vc, betaVc, w_c);
 
 % Simulate using ode45
 [t_sim, x_sim] = ode45(ode_fun, tspan, x0);
@@ -111,7 +117,10 @@ ylabel('Yaw rate (r) (deg/s)');
 xlabel('Time (s)');
 grid on;
 
+fprintf('XHY PWM动力学测试完成: 主推 M080, 辅推 M060, 输入电压 %.1f V\n', voltage_v);
+fprintf('固定PWM = [%.0f %.0f %.0f %.0f %.0f] us\n', pwm_fixed_us);
+
 % ODE wrapper function
-function xdot = xhy_ode(t, x, ui, Vc, betaVc, w_c)
-[xdot, ~, ~, ~, ~, ~, ~] = xhy(x, ui, Vc, betaVc, w_c);
+function xdot = xhy_ode(t, x, pwm_us, voltage_v, Vc, betaVc, w_c)
+xdot = xhy_pwm_test_step(x, pwm_us, voltage_v, Vc, betaVc, w_c);
 end

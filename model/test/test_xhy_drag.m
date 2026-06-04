@@ -1,6 +1,6 @@
 % TEST_XHY_DRAG 测试XHY阻力模型
 % 测试速度范围：0-1 m/s（平动），0-2 rad/s（转动）
-
+%%
 clear; close all;
 
 % 质量矩阵（从xhy.m）
@@ -22,7 +22,7 @@ r_range = linspace(0, 2, 50);
 Fx_data = zeros(size(u_range));
 for i = 1:length(u_range)
     nu_r = [u_range(i); 0; 0; 0; 0; 0];
-    [tau_drag, ~] = xhy_drag_cfd(nu_r, M);
+    [tau_drag, ~] = xhy_drag_cfd(nu_r);
     Fx_data(i) = tau_drag(1);
 end
 
@@ -30,7 +30,7 @@ end
 Fy_data = zeros(size(v_range));
 for i = 1:length(v_range)
     nu_r = [0; v_range(i); 0; 0; 0; 0];
-    [tau_drag, ~] = xhy_drag_cfd(nu_r, M);
+    [tau_drag, ~] = xhy_drag_cfd(nu_r);
     Fy_data(i) = tau_drag(2);
 end
 
@@ -38,7 +38,7 @@ end
 Fz_data = zeros(size(w_range));
 for i = 1:length(w_range)
     nu_r = [0; 0; w_range(i); 0; 0; 0];
-    [tau_drag, ~] = xhy_drag_cfd(nu_r, M);
+    [tau_drag, ~] = xhy_drag_cfd(nu_r);
     Fz_data(i) = tau_drag(3);
 end
 
@@ -46,7 +46,7 @@ end
 K_data = zeros(size(p_range));
 for i = 1:length(p_range)
     nu_r = [0; 0; 0; p_range(i); 0; 0];
-    [tau_drag, ~] = xhy_drag_cfd(nu_r, M);
+    [tau_drag, ~] = xhy_drag_cfd(nu_r);
     K_data(i) = tau_drag(4);
 end
 
@@ -54,7 +54,7 @@ end
 M_data = zeros(size(q_range));
 for i = 1:length(q_range)
     nu_r = [0; 0; 0; 0; q_range(i); 0];
-    [tau_drag, ~] = xhy_drag_cfd(nu_r, M);
+    [tau_drag, ~] = xhy_drag_cfd(nu_r);
     M_data(i) = tau_drag(5);
 end
 
@@ -62,7 +62,7 @@ end
 N_data = zeros(size(r_range));
 for i = 1:length(r_range)
     nu_r = [0; 0; 0; 0; 0; r_range(i)];
-    [tau_drag, ~] = xhy_drag_cfd(nu_r, M);
+    [tau_drag, ~] = xhy_drag_cfd(nu_r);
     N_data(i) = tau_drag(6);
 end
 
