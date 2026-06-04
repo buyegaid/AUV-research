@@ -1,0 +1,3 @@
+# CLAUDE.md / AGENTS.md 各分支独立维护，merge 时保留当前分支版本
+CLAUDE.md merge=ours
+AGENTS.md merge=ours
