@@ -24,7 +24,7 @@ x0(12) = 0;  % initial yaw angle (rad)
 
 % 固定推进器输入 PWM(us)
 % 顺序: [M080主推, M060前垂推, M060后垂推, M060前侧推, M060后侧推]'
-pwm_fixed_us = [1650; 1500; 1500; 1600; 1600];
+pwm_fixed_us = [1800; 1500; 1500; 1500; 1500];
 
 % Ocean currents (optional, set to zero)
 Vc = 0;
