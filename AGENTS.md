@@ -1,4 +1,4 @@
-# AGENTS.md
+﻿# AGENTS.md
 
 This file provides guidance to Codex (Codex.ai/code) when working with code in this repository.
 
@@ -10,16 +10,28 @@ This file provides guidance to Codex (Codex.ai/code) when working with code in t
 
 确保路径已添加：
 ```matlab
-addpath('.', './Lib', './guidance', './controller/xhy', './controller/remus', './model', './eso', './post', './traj');
+project_root = setup_paths();
 ```
+
+## 目录结构
+
+- `src/matlab/`：核心 MATLAB 代码（`Lib/`、`controller/`、`model/`、`eso/` 等）
+- `apps/`：仿真入口和主循环
+- `experiments/`：对比实验、轨迹/站位实验、参数敏感性和批处理
+- `analysis/`：水池数据分析、系统辨识、标定和绘图
+- `tests/`：模型、ESO 和集成测试
+- `data/raw/`：原始实验 CSV
+- `assets/figures/`：关键历史图和分析图
+
+详细说明见 `docs/DIRECTORY_STRUCTURE.md`。
 
 ## 研究目标
 
 **AUV 抗流控制**：用 ESO（扩展状态观测器）估计海流扰动，并前馈补偿到 SMC 控制律中，与纯 SMC 和 ISMC（积分滑模）进行对比。
 
 **三种对比方法：**
-- **SMC**：标准滑模控制，无积分项（`controller/remus/SMCheading.m`，HeadingMode=2）
-- **ISMC**：积分滑模控制，含积分项消除稳态误差（`controller/remus/my_integralSMCheading.m`，HeadingMode=1）
+- **SMC**：标准滑模控制，无积分项（`src/matlab/controller/remus/SMCheading.m`，HeadingMode=2）
+- **ISMC**：积分滑模控制，含积分项消除稳态误差（`src/matlab/controller/remus/my_integralSMCheading.m`，HeadingMode=1）
 - **SMC+ESO**：SMC + ESO 扰动前馈补偿（useESO=1，HeadingMode=2）
 
 **两个平台的角色：**
@@ -32,7 +44,7 @@ addpath('.', './Lib', './guidance', './controller/xhy', './controller/remus', '.
 
 ### CFD 仿真
 
-- 已完成：Surge/Sway/Heave 直航+斜航阻力 CFD（Fluent），结果写入 `model/xhy_drag_cfd.m`
+- 已完成：Surge/Sway/Heave 直航+斜航阻力 CFD（Fluent），结果写入 `src/matlab/model/xhy_drag_cfd.m`
 - 进行中：转动阻尼 MRF CFD（横滚/俯仰/偏航，12工况），当前用时间常数法临时替代
 - 待开展：斜航/旋转臂 CFD（交叉耦合阻尼 36工况）、附加质量交叉项辨识
 
@@ -50,11 +62,11 @@ addpath('.', './Lib', './guidance', './controller/xhy', './controller/remus', '.
 
 ### 模型更新（2026-05-31）
 
-- `model/xhy.m`：阻力计算从 `forceLiftDrag+crossFlowDrag` → `xhy_drag_cfd`（基于 CFD 数据）
-- `model/drag.m`：统一使用时间常数法（T1=T2=20s, T6=1s）
-- `model/thrust_main.m`：KT_f 从 0.33 → 0.019（等效推力系数）
-- `model/thrust_aux.m`：死区补偿参数更新
-- `controller/xhy/smc_surge_xhy.m`：阻力补偿从 d1/d2 二次模型 → T1 时间常数线性模型
+- `src/matlab/model/xhy.m`：阻力计算从 `forceLiftDrag+crossFlowDrag` → `xhy_drag_cfd`（基于 CFD 数据）
+- `src/matlab/model/drag.m`：统一使用时间常数法（T1=T2=20s, T6=1s）
+- `src/matlab/model/thrust_main.m`：KT_f 从 0.33 → 0.019（等效推力系数）
+- `src/matlab/model/thrust_aux.m`：死区补偿参数更新
+- `src/matlab/controller/xhy/smc_surge_xhy.m`：阻力补偿从 d1/d2 二次模型 → T1 时间常数线性模型
 
 ### Obsidian 参考文档（tag: 小黄鱼）
 
@@ -85,7 +97,7 @@ compare_results(hist_smc, hist_eso, 'SMC vs SMC+ESO');
 % 指标：航向误差RMSE、横向误差RMSE、舵角RMS、滑模面RMS
 
 % 测试动力学模型
-cd model/test && test_xhy_dynamics
+project_root = setup_paths(); test_xhy_dynamics
 ```
 
 `main_loop_remus` 参数顺序：`(useESO, TrajMode, CurrentModel, ControlFlag, HeadingMode, KinematicsFlag, params)`
@@ -100,7 +112,7 @@ cd model/test && test_xhy_dynamics
 
 ## 参数配置
 
-所有可调参数集中在 `Lib/get_params.m`：
+所有可调参数集中在 `src/matlab/Lib/get_params.m`：
 - `params.current.*` — 海流速度/方向（Vc=0 关闭海流）
 - `params.xhy.surge/yaw/pitch/heave` — XHY 各通道 SMC 增益
 - `params.eso.*` — ESO 带宽（omega0_base/max）、滤波截止频率、RK4 开关
@@ -112,14 +124,14 @@ cd model/test && test_xhy_dynamics
 
 | 文件 | 功能 | 备注 |
 |------|------|------|
-| `model/xhy.m` | XHY 6-DOF 动力学主模型 | 阻力用 `xhy_drag_cfd`（CFD 数据），推进器用推力分配 |
-| `model/xhy_drag_cfd.m` | CFD 标定的阻力模型 | Surge/Sway/Heave 二次阻力系数来自 Fluent 仿真 |
-| `model/drag.m` | 通用线性阻尼矩阵 | 时间常数法（T1=20s surge, T2=20s sway, T6=1s yaw） |
-| `model/thrust_main.m` | 主推进器推力模型 | KT_f=0.019（等效系数，含实际损耗） |
-| `model/thrust_aux.m` | 辅助推进器推力模型 | 4 垂推/侧推，含死区补偿 |
-| `model/gauss_markov_current.m` | 时变海流生成器 | 4 种场景：均匀/GM缓变/剪切/空间相关 |
-| `eso/vec_leso_update_adv.m` | 标准 LESO（自适应带宽） | 6-DOF 扰动观测，前馈补偿 |
-| `eso/vec_pieso_update.m` | 物理信息 ESO（PI-ESO） | 嵌入 GM 海流模型，Z3 含衰减项 -Λ·Z3 |
+| `src/matlab/model/xhy.m` | XHY 6-DOF 动力学主模型 | 阻力用 `xhy_drag_cfd`（CFD 数据），推进器用推力分配 |
+| `src/matlab/model/xhy_drag_cfd.m` | CFD 标定的阻力模型 | Surge/Sway/Heave 二次阻力系数来自 Fluent 仿真 |
+| `src/matlab/model/drag.m` | 通用线性阻尼矩阵 | 时间常数法（T1=20s surge, T2=20s sway, T6=1s yaw） |
+| `src/matlab/model/thrust_main.m` | 主推进器推力模型 | KT_f=0.019（等效系数，含实际损耗） |
+| `src/matlab/model/thrust_aux.m` | 辅助推进器推力模型 | 4 垂推/侧推，含死区补偿 |
+| `src/matlab/model/gauss_markov_current.m` | 时变海流生成器 | 4 种场景：均匀/GM缓变/剪切/空间相关 |
+| `src/matlab/eso/vec_leso_update_adv.m` | 标准 LESO（自适应带宽） | 6-DOF 扰动观测，前馈补偿 |
+| `src/matlab/eso/vec_pieso_update.m` | 物理信息 ESO（PI-ESO） | 嵌入 GM 海流模型，Z3 含衰减项 -Λ·Z3 |
 
 ## 调试
 

@@ -3,7 +3,7 @@
 *.m~
 *.autosave
 
-# MATLAB编译文件
+# MATLAB 编译文件
 *.mex*
 *.p
 
@@ -19,7 +19,7 @@ codegen/
 *.slxc
 sccprj/
 
-# 数据文件（可选，根据需要调整）
+# 自动生成的数据和图窗文件
 *.mat
 *.fig
 
@@ -42,10 +42,35 @@ desktop.ini
 *.swo
 *.tmp
 
-# 输出文件（可选）
+# 输出目录
 output/
 results/
 figures/
+
+# LaTeX 编译中间文件
+paper/*.aux
+paper/*.bbl
+paper/*.blg
+paper/*.out
+paper/*.log
+paper/*.fls
+paper/*.fdb_latexmk
+paper/*.synctex.gz
+paper/chinese_backup/*.aux
+paper/chinese_backup/*.bbl
+paper/chinese_backup/*.blg
+paper/chinese_backup/*.out
+paper/chinese_backup/*.log
+paper/chinese_backup/*.fls
+paper/chinese_backup/*.fdb_latexmk
+paper/chinese_backup/*.synctex.gz
+
+# 强化学习训练产物
+TD3*.mat
+DDPG*.mat
+SAC*.mat
+*_agent*.mat
+*_trainingStats*.mat
 
 # Claude Code 工作树和代理元数据
 .claude/worktrees/
