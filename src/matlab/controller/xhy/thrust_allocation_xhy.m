@@ -34,7 +34,7 @@ function [n_rpm, info] = thrust_allocation_xhy(tau_cmd, params)
 %   推力模型: T = rho * D^4 * KT * |n| * n  (n单位: rps)
 %   主推和辅推使用不同的D和KT，正反转KT独立
 
-% 默认参数（与thrust_main.m、thrust_aux.m保持一致）
+% 默认参数（传统 RPM/KT 兼容路径）
 if nargin < 2
     params.rho = 1026;
     params.D_prop_main = 0.10;
@@ -70,15 +70,8 @@ D_arr  = [params.D_prop_main; params.D_prop_aux; params.D_prop_aux; params.D_pro
 KT_fwd_arr = [params.KT_main_fwd; params.KT_aux_fwd; params.KT_aux_fwd; params.KT_aux_fwd; params.KT_aux_fwd];
 KT_rev_arr = [params.KT_main_rev; params.KT_aux_rev; params.KT_aux_rev; params.KT_aux_rev; params.KT_aux_rev];
 
-% 推力分配矩阵
-B_thr = [
-    1,  0,                  0,                  0,                0;
-    0,  0,                  0,                  1,                1;
-    0,  1,                  1,                  0,                0;
-    0,  0,                  0,                  0,                0;
-    0, -params.x_vert_f,   -params.x_vert_r,    0,                0;
-    0,  0,                  0,                  params.x_side_f,  params.x_side_r
-    ];
+% 推力分配矩阵（统一来源，消除重复定义）
+[B_thr, pos] = xhy_thruster_geometry();
 
 % 横滚通道不可控，移除第4行
 B_actuated = B_thr([1 2 3 5 6], :);  % 5x5矩阵

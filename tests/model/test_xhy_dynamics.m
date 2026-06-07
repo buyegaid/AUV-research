@@ -1,4 +1,4 @@
-﻿% XHY AUV 动力学模型测试
+% XHY AUV 动力学模型测试
 % 使用实物推进器配置: 主推 M080, 辅推 M060, 输入为 PWM 脉宽和供电电压。
 % 通过 m080_thruster_model / m060_thruster_model 计算推力后驱动 XHY 动力学。
 
@@ -6,7 +6,8 @@ clear all; close all; clc;
 
 script_dir = fileparts(mfilename('fullpath'));
 project_root = fullfile(script_dir, '..', '..');
-project_root = setup_paths();
+cd(project_root);
+setup_paths();
 
 % Simulation parameters
 tspan = [0 100];  % 100 seconds
@@ -20,7 +21,7 @@ x0(12) = 0;  % initial yaw angle (rad)
 
 % 固定推进器输入 PWM(us)
 % 顺序: [M080主推, M060前垂推, M060后垂推, M060前侧推, M060后侧推]'
-pwm_fixed_us = [1800; 1500; 1500; 1500; 1500];
+pwm_fixed_us = [1650; 1500; 1500; 1600; 1600];
 
 % Ocean currents (optional, set to zero)
 Vc = 0;
@@ -117,6 +118,6 @@ fprintf('XHY PWM动力学测试完成: 主推 M080, 辅推 M060, 输入电压 %.
 fprintf('固定PWM = [%.0f %.0f %.0f %.0f %.0f] us\n', pwm_fixed_us);
 
 % ODE wrapper function
-function xdot = xhy_ode(t, x, pwm_us, voltage_v, Vc, betaVc, w_c)
+function xdot = xhy_ode(~, x, pwm_us, voltage_v, Vc, betaVc, w_c)
 xdot = xhy_pwm_test_step(x, pwm_us, voltage_v, Vc, betaVc, w_c);
 end

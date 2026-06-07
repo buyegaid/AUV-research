@@ -30,6 +30,10 @@ params.speed_load_factor = 0.75;
 params.power_exponent = 3.0;
 params.min_abs_command_for_torque = 0.03;
 
+% 推力标定增益（默认 1.0 = 不缩放，由水池标定参数覆盖）
+params.thrust_gain_forward = 1.0;
+params.thrust_gain_reverse = 1.0;
+
 params.forward_voltage_v = [12.0, 16.0, 24.0];
 params.forward_thrust_n = [1.0, 1.5, 3.0] .* kgf_to_n;
 
