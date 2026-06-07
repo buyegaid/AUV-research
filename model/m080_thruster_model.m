@@ -65,11 +65,6 @@ max_thrust_n(command < 0) = max_reverse_n(command < 0);
 
 thrust_n = direction .* max_thrust_n .* abs_command.^2;
 
-% 应用水池标定增益（数字孪生链路中的推进器推力校准）
-% 正向/反向分别标定以处理 CW/CCW 推进器正反转不对称
-thrust_n(direction > 0) = thrust_n(direction > 0) * params.thrust_gain_forward;
-thrust_n(direction < 0) = thrust_n(direction < 0) * params.thrust_gain_reverse;
-
 % 水动力负载功率通常近似随转速三次方变化, 这里作为初始工程模型。
 voltage_scale = min((voltage_v ./ params.max_voltage_v).^2, 1.0);
 voltage_scale = max(voltage_scale, 0.0);

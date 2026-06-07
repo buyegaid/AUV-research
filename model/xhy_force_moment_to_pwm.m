@@ -101,7 +101,7 @@ if ~isfield(params, 'moment_scale'), params.moment_scale = 100; end
 if ~isfield(params, 'thrust_limit_pos_g'), params.thrust_limit_pos_g = 9500 * ones(5,1); end
 if ~isfield(params, 'thrust_limit_neg_g'), params.thrust_limit_neg_g = 7300 * ones(5,1); end
 if ~isfield(params, 'pwm_center_us'), params.pwm_center_us = 1500; end
-if ~isfield(params, 'pwm_max'), params.pwm_max = 350; end  % 匹配M080/M060硬限幅 1850us
+if ~isfield(params, 'pwm_max'), params.pwm_max = 450; end
 if ~isfield(params, 'ramp_step'), params.ramp_step = 50; end
 if ~isfield(params, 'enable_ramp'), params.enable_ramp = has_prev_pwm; end
 

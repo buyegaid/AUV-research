@@ -10,7 +10,6 @@ useESO    = 0;   % 是否使用ESO补偿
 usePIESO  = 1;   % 是否使用物理信息ESO（PI-ESO，Gauss-Markov海流模型）
 TrajMode  = 2;   % 1-直线, 2-圆形
 DepthMode = 2;   % 1-俯仰控深, 2-直接Z力控深
-ThrMode   = 1;   % 1-数字孪生(PWM+M080/M060+水池标定), 2-传统(RPM+KT系数)
 params    = get_params;
 
 h = 0.01;
@@ -49,36 +48,6 @@ thr_params.x_vert_r = -0.293;
 thr_params.x_side_f = +0.424;
 thr_params.x_side_r = -0.376;
 
-%% 数字孪生推进器配置（ThrMode=1）
-if ThrMode == 1
-    % 加载水池标定参数
-    cal = xhy_pool_calibration();
-
-    % 生成各推进器水池标定参数（24V供电）
-    p_m080_main = cal.make_m080_params(24.0);
-    p_m060_vert = cal.make_m060_vert_params(24.0);
-    p_m060_side = cal.make_m060_side_params(24.0);
-
-    % xhy.m PWM模式的配置
-    opt_xhy.mode = 'pwm';
-    opt_xhy.thruster_params = {p_m080_main, p_m060_vert, p_m060_vert, p_m060_side, p_m060_side};
-    opt_xhy.voltage_v = 24.0;
-
-    % 推力分配参数（xhy_force_moment_to_pwm 使用）
-    alloc_params = struct();
-    alloc_params.pwm_prev_doc = zeros(5,1);  % 初始无上一周期PWM
-
-    fprintf('推进器标定增益:\n');
-    fprintf('  M080 T5主推:   fwd=%.4f, rev=%.4f\n', ...
-        p_m080_main.thrust_gain_forward, p_m080_main.thrust_gain_reverse);
-    fprintf('  M060 T1/T2垂推: fwd=%.4f, rev=%.4f\n', ...
-        p_m060_vert.thrust_gain_forward, p_m060_vert.thrust_gain_reverse);
-    fprintf('  M060 T3/T4侧推: fwd=%.4f, rev=%.4f\n', ...
-        p_m060_side.thrust_gain_forward, p_m060_side.thrust_gain_reverse);
-else
-    opt_xhy = struct('mode', 'rpm');
-end
-
 %% ESO状态
 Z = zeros(6, 3);
 
@@ -109,7 +78,7 @@ for i = 1:N
     theta = x(11); psi = x(12);
 
     % 动力学矩阵（用于ESO的已知加速度）
-    [~, ~, M, C, D, g_vec, tau_thr] = xhy(x, ui, Vc, betaVc, wc, opt_xhy);
+    [~, ~, M, C, D, g_vec, tau_thr] = xhy(x, ui, Vc, betaVc, wc);
 
     % 计算相对速度（去除海流分量）
     u_c_x = Vc * cos(betaVc - psi);
@@ -157,15 +126,8 @@ for i = 1:N
     % 组装6-DOF力/力矩指令 [X Y Z K M N]
     tau_cmd = [X_cmd; 0; Z_cmd; 0; M_cmd; N_cmd];
 
-    % 推力分配（数字孪生: N→CAN-g→K矩阵→PWM→M080/M060）
-    if ThrMode == 1
-        fw_cmd = cal.tau_N_to_can_g(tau_cmd);
-        [pwm_us_doc, ~] = xhy_force_moment_to_pwm(fw_cmd, alloc_params, alloc_params.pwm_prev_doc);
-        ui = [pwm_us_doc(5); pwm_us_doc(1:4)];  % doc→dyn顺序
-        alloc_params.pwm_prev_doc = pwm_us_doc;
-    else
-        [ui, ~] = thrust_allocation_xhy(tau_cmd, thr_params);
-    end
+    % 推力分配
+    [ui, ~] = thrust_allocation_xhy(tau_cmd, thr_params);
 
     % 存储
     hist.x(i,:)  = x';
@@ -174,7 +136,7 @@ for i = 1:N
     hist.xd(i,:) = [psi_d, theta_d, psi_ref, theta_ref];
 
     % 状态更新
-    x     = rk4(@xhy, h, x, ui, Vc, betaVc, wc, opt_xhy);
+    x     = rk4(@xhy, h, x, ui, Vc, betaVc, wc);
     x(12) = ssa(x(12));
 
     timebar;
