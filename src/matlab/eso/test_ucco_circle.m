@@ -15,7 +15,7 @@ project_root = setup_paths();
 
 %% ===== 仿真参数 =====
 dt     = 0.01;       % 时间步长 (s)
-T_end  = 100;        % 仿真时间 (s)
+T_end  = 500;        % 仿真时间 (s)
 t_vec  = 0:dt:T_end;
 N      = length(t_vec);
 
@@ -29,12 +29,14 @@ c_true_N = Vc * cos(betaVc);  % N分量
 c_true_E = Vc * sin(betaVc);  % E分量
 
 %% ===== 参考轨迹：圆形 =====
-pts = traj(20, 50);  % 弧长20m间距，50个点，半径300m
+pts = traj(100, 10);  % 弧长100m间距，10个点，半径300m（粗离散多边形逼近圆）
 % wp1 = (300, 0, 0), 逆时针方向
 
 %% ===== 控制器参数 =====
 params = get_params();
-params.alos.K_f = 0.5;   % LOS滤波器增益（默认值）
+params.alos.K_f = 0.5;      % LOS滤波器增益（默认值）
+params.alos.R_switch = 15;  % 增大航点切换半径：海流导致~10m横向稳态误差，
+                            % traj(100,10)航点间距100m，默认R_switch=10刚够不到
 
 %% ===== 推进器参数（RPM模式） =====
 thr_params.rho         = 1026;
