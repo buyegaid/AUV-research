@@ -65,7 +65,7 @@ else
 end
 
 % CFD动力学预测
-[tau_drag, ~] = xhy_drag_cfd(nu_r, M);
+[tau_drag, ~] = xhy_drag_cfd(nu_r);
 [C_nu, g_nu] = compute_coriolis_gravity_ekf(nu_r, psi, M);
 r = nu_hat(6);
 Dnu_c = [r*v_c; -r*u_c; 0; 0; 0; 0];
@@ -101,7 +101,7 @@ for j = 1:n_x
     nu_cp = [u_cp; v_cp; 0; 0; 0; 0];
     nu_rp = nup - nu_cp;
 
-    [tau_drag_p, ~] = xhy_drag_cfd(nu_rp, M);
+    [tau_drag_p, ~] = xhy_drag_cfd(nu_rp);
     [Cp, gp] = compute_coriolis_gravity_ekf(nu_rp, psi, M);
     Dnu_c_p = [nup(6)*v_cp; -nup(6)*u_cp; 0; 0; 0; 0];
 

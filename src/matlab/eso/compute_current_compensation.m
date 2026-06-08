@@ -15,13 +15,13 @@ nu_c = [u_c; v_c; 0; 0; 0; 0];
 
 % 含估计海流的动力学加速度
 nu_r_est = nu - nu_c;
-[tau_drag_est, ~] = xhy_drag_cfd(nu_r_est, M);
+[tau_drag_est, ~] = xhy_drag_cfd(nu_r_est);
 [C_est, g_est] = compute_cg_standalone(nu_r_est, psi, M);
 Dnu_c = [nu(6)*v_c; -nu(6)*u_c; 0; 0; 0; 0];
 nu_dot_c = Dnu_c + M \ (tau_thr + tau_drag_est - C_est*nu_r_est - g_est);
 
 % 零海流动力学加速度
-[tau_drag_0, ~] = xhy_drag_cfd(nu, M);
+[tau_drag_0, ~] = xhy_drag_cfd(nu);
 [C_0, g_0] = compute_cg_standalone(nu, psi, M);
 nu_dot_0 = M \ (tau_thr + tau_drag_0 - C_0*nu - g_0);
 

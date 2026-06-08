@@ -52,7 +52,7 @@ nu_c = [u_c; v_c; 0; 0; 0; 0];
 %% 2. 观测器模型前向积分（含测量注入）
 % nu_r_obs = nu_obs - nu_c
 % 使用简化动力学: nu_dot ≈ M\(tau - D(nu_r)*nu_r - g) + K*(nu_meas - nu_obs)
-[tau_drag_obs, D_obs] = xhy_drag_cfd(nu_obs - nu_c, M);
+[tau_drag_obs, D_obs] = xhy_drag_cfd(nu_obs - nu_c);
 [C_obs, g_obs] = compute_coriolis_gravity(nu_obs - nu_c, psi, M);
 
 nu_dot_obs = M \ (tau + tau_drag_obs - C_obs*(nu_obs - nu_c) - g_obs) ...
@@ -75,7 +75,7 @@ for j = 1:2
     nu_r_p = nu_obs - nu_c_p;
 
     % 扰动动力学加速度
-    [tau_drag_p, ~] = xhy_drag_cfd(nu_r_p, M);
+    [tau_drag_p, ~] = xhy_drag_cfd(nu_r_p);
     [C_p, g_p] = compute_coriolis_gravity(nu_r_p, psi, M);
 
     % Dνc项对海流的导数: Dνc = [r*v_c; -r*u_c; 0; 0; 0; 0]
@@ -85,7 +85,7 @@ for j = 1:2
     nu_dot_p = Dnu_c_p + M \ (tau + tau_drag_p - C_p*nu_r_p - g_p);
 
     % 基准（当前估计的加速度）
-    [tau_drag_0, ~] = xhy_drag_cfd(nu_obs - nu_c, M);
+    [tau_drag_0, ~] = xhy_drag_cfd(nu_obs - nu_c);
     Dnu_c_0 = [r*v_c; -r*u_c; 0; 0; 0; 0];
     nu_dot_0 = Dnu_c_0 + M \ (tau + tau_drag_0 - C_obs*(nu_obs - nu_c) - g_obs);
 

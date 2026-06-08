@@ -19,7 +19,7 @@ v_c = -c_hat(1)*sin(psi) + c_hat(2)*cos(psi);
 nu_c = [u_c; v_c; 0; 0; 0; 0];
 nu_r = nu_prev - nu_c;
 
-[tau_drag, ~] = xhy_drag_cfd(nu_r, M);
+[tau_drag, ~] = xhy_drag_cfd(nu_r);
 [C_nu, g_nu] = compute_cg_u(nu_r, psi, M);
 Dnu_c = [nu_prev(6)*v_c; -nu_prev(6)*u_c; 0; 0; 0; 0];
 
@@ -38,7 +38,7 @@ for j = 1:2
     v_c_p = -cp(1)*sin(psi) + cp(2)*cos(psi);
     nu_c_p = [u_c_p; v_c_p; 0; 0; 0; 0];
     nu_r_p = nu_prev - nu_c_p;
-    [td_p, ~] = xhy_drag_cfd(nu_r_p, M);
+    [td_p, ~] = xhy_drag_cfd(nu_r_p);
     [Cp, gp] = compute_cg_u(nu_r_p, psi, M);
     Dnc_p = [nu_prev(6)*v_c_p; -nu_prev(6)*u_c_p; 0; 0; 0; 0];
     a_p = Dnc_p + M \ (tau + td_p - Cp*nu_r_p - gp);
