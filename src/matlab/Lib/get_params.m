@@ -75,33 +75,34 @@ params.alos.R_switch = 10;           % 航点切换半径 (m)
 params.alos.K_f = 0.5;               % LOS观测器的增益 LOS observer gain
 
 %% XHY SMC参数
-% 纵荡通道 (m_eff = m + Xu_dot = 33 + 11.2773)
-params.xhy.surge.m_eff  = 44.2773;
+% 纵荡通道（m_eff = m + Xu_dot: 85.832 + 15.81 = 101.642）
+% 注：m_eff 基于 XHY 实际质量 m=85.832kg（非 REMUS 的 33kg）
+params.xhy.surge.m_eff  = 101.642;
 params.xhy.surge.T1     = 20;      % 纵荡时间常数 (与xhy.m中T1一致)
 params.xhy.surge.lambda = 0.3;
 params.xhy.surge.Kd     = 5;
 params.xhy.surge.Ks     = 3;
 params.xhy.surge.phi_b  = 0.1;
 
-% 沉浮通道 (m_eff_z = m + Zw_dot = 33 + 47.104)
-% g_z = B - W = W*0.01 ≈ 33*9.81*0.01 ≈ 3.24 N（正浮力，NED中需向下施力补偿）
-params.xhy.heave.m_eff_z = 80.104;
-params.xhy.heave.d_w     = 80.104 / 20;  % 沉浮线性阻尼（时间常数约20s）
-params.xhy.heave.g_z     = 33 * 9.81 * 0.01;  % 净浮力 B-W (N)
+% 沉浮通道（m_eff_z: 85.832 + 42.87 = 128.702）
+% xhy.m 中 B=W（中性浮力），g_z=0
+params.xhy.heave.m_eff_z = 128.702;
+params.xhy.heave.d_w     = 128.702 / 20;  % 沉浮线性阻尼（时间常数约20s）
+params.xhy.heave.g_z     = 0;              % 净浮力（B=W, 中性）
 params.xhy.heave.lambda  = 0.3;
 params.xhy.heave.Kd      = 8;
 params.xhy.heave.Ks      = 5;
 params.xhy.heave.phi_b   = 0.05;
 
-% 俯仰通道 (Iy_eff = Iy + Mq_dot = 2.107488 + 0.043)
-params.xhy.pitch.Iy_eff = 2.150488;
+% 俯仰通道（Iy_eff: 7.1735 + 0.041 = 7.215）
+params.xhy.pitch.Iy_eff = 7.215;
 params.xhy.pitch.lambda = 0.5;
 params.xhy.pitch.Kd     = 2;
 params.xhy.pitch.Ks     = 1;
 params.xhy.pitch.phi_b  = 0.05;
 
-% 偏航通道 (Iz_eff = Iz + Nr_dot = 1.849137 + 0.138)
-params.xhy.yaw.Iz_eff   = 1.987137;
+% 偏航通道（Iz_eff: 6.3906 + 0.123 = 6.514）
+params.xhy.yaw.Iz_eff   = 6.514;
 params.xhy.yaw.lambda   = 0.5;
 params.xhy.yaw.Kd       = 2;
 params.xhy.yaw.Ks       = 1;

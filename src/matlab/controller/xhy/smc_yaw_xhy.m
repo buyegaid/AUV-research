@@ -34,5 +34,8 @@ end
 
 N_cmd = Iz_eff * (r_r_dot - Kd*sigma - Ks*sat_s);
 
+% 积分更新 + 抗饱和：限制积分幅值，防止力矩饱和时的积分windup
 psi_int = psi_int + h * e_psi;
+psi_int_max = 1.0;  % ≈1 rad·s，足够补偿海流扰动
+psi_int = max(-psi_int_max, min(psi_int_max, psi_int));
 end

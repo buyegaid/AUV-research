@@ -33,5 +33,9 @@ D_linear = m_eff / T1;
 %  设计权衡：简化前馈模型 → 增大滑模面波动，但控制器结构更简单，鲁棒性由Ks项保证
 X_cmd = m_eff*(u_d_dot - lambda*e_u - Kd*sigma - Ks*sat_s) + D_linear*u;
 
+% 积分更新 + 抗饱和：限制积分幅值，防止推力不足时的积分windup
+% u_int≈0.15等效能提供约23N推力(m_eff*Kd*lambda*u_int)，远超M080主推最大约10N
 u_int = u_int + h * e_u;
+u_int_max = 0.15;
+u_int = max(-u_int_max, min(u_int_max, u_int));
 end
