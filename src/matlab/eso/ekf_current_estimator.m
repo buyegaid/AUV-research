@@ -15,7 +15,7 @@ function [x_hat, P, aux] = ekf_current_estimator(x_hat, P, nu_meas, tau, psi, M,
 %   tau:     6×1 控制力/力矩
 %   psi:     航向角 (rad)
 %   M:       6×6 惯性矩阵
-%   params:  params.ekf.* 参数
+%   params:  params.* 参数
 %   dt:      时间步长
 %
 % 输出:
@@ -25,7 +25,7 @@ function [x_hat, P, aux] = ekf_current_estimator(x_hat, P, nu_meas, tau, psi, M,
 
 n_nu = 6;
 n_c = 2;
-has_bias = params.ekf.use_bias;
+has_bias = params.use_bias;
 
 if has_bias
     n_b = 6;
@@ -41,7 +41,7 @@ if isempty(x_hat) || length(x_hat) ~= n_x
     x_hat(1:n_nu) = nu_meas;
 end
 if isempty(P) || size(P,1) ~= n_x
-    P = params.ekf.P0 * eye(n_x);
+    P = params.P0 * eye(n_x);
 end
 
 %% ==== 预测步 ====
@@ -77,19 +77,19 @@ x_pred = x_hat;
 x_pred(1:6) = nu_hat + nu_dot_pred * dt;
 
 % 海流GM传播
-alpha_c = exp(-dt / params.ekf.tau_c);
-x_pred(7) = alpha_c * cN + (1-alpha_c) * params.ekf.c_mean(1);
-x_pred(8) = alpha_c * cE + (1-alpha_c) * params.ekf.c_mean(2);
+alpha_c = exp(-dt / params.tau_c);
+x_pred(7) = alpha_c * cN + (1-alpha_c) * params.c_mean(1);
+x_pred(8) = alpha_c * cE + (1-alpha_c) * params.c_mean(2);
 
 % 力偏置慢变
 if has_bias
-    alpha_b = exp(-dt / params.ekf.tau_b);
+    alpha_b = exp(-dt / params.tau_b);
     x_pred(9:14) = alpha_b * b_tau;
 end
 
 %% ==== Jacobian计算（数值）====
 F = eye(n_x);
-delta_x = params.ekf.jac_pert;
+delta_x = params.jac_pert;
 
 for j = 1:n_x
     xp = x_hat;
@@ -118,8 +118,8 @@ for j = 1:n_x
     xp_pred(1:6) = nup + nu_dot_p * dt;
 
     % 海流
-    xp_pred(7) = alpha_c*cNp + (1-alpha_c)*params.ekf.c_mean(1);
-    xp_pred(8) = alpha_c*cEp + (1-alpha_c)*params.ekf.c_mean(2);
+    xp_pred(7) = alpha_c*cNp + (1-alpha_c)*params.c_mean(1);
+    xp_pred(8) = alpha_c*cEp + (1-alpha_c)*params.c_mean(2);
 
     if has_bias
         xp_pred(9:14) = alpha_b * xp(9:14);
@@ -129,17 +129,17 @@ for j = 1:n_x
 end
 
 % 协方差预测
-Q = params.ekf.Q0 * eye(n_x);
-Q(1:6, 1:6) = params.ekf.Q_nu * eye(6) * dt;
-Q(7:8, 7:8) = params.ekf.Q_c * eye(2) * dt;
+Q = params.Q0 * eye(n_x);
+Q(1:6, 1:6) = params.Q_nu * eye(6) * dt;
+Q(7:8, 7:8) = params.Q_c * eye(2) * dt;
 if has_bias
-    Q(9:14, 9:14) = params.ekf.Q_b * eye(6) * dt;
+    Q(9:14, 9:14) = params.Q_b * eye(6) * dt;
 end
 P_pred = F * P * F' + Q;
 
 %% ==== 更新步 ====
 H = [eye(6), zeros(6, n_x-6)];  % 测量 ν(1:6)
-R = params.ekf.R0 * eye(6);
+R = params.R0 * eye(6);
 
 y = nu_meas - x_pred(1:6);  % 新息
 S = H * P_pred * H' + R;
@@ -149,8 +149,8 @@ x_hat = x_pred + K * y;
 P = (eye(n_x) - K * H) * P_pred;
 
 % 海流约束
-x_hat(7) = max(-params.ekf.c_max, min(params.ekf.c_max, x_hat(7)));
-x_hat(8) = max(-params.ekf.c_max, min(params.ekf.c_max, x_hat(8)));
+x_hat(7) = max(-params.c_max, min(params.c_max, x_hat(7)));
+x_hat(8) = max(-params.c_max, min(params.c_max, x_hat(8)));
 
 %% ==== 诊断 ====
 aux.c_hat = x_hat(7:8);

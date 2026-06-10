@@ -208,7 +208,7 @@ for i = 1:N
     if obs_use(1)
         [kin.Vc_hat, kin.beta_hat, kin.x_hat, kin_aux] = ...
             kin_current_observer(kin.Vc_hat, kin.beta_hat, kin.x_hat, ...
-                nu_meas, eta_meas, psi, 0, params, dt);
+                nu_meas, eta_meas, psi, 0, params.kin, dt);
         kin.c_hist(i, :) = [kin.Vc_hat*cos(kin.beta_hat); kin.Vc_hat*sin(kin.beta_hat)]';
     end
 
@@ -216,14 +216,14 @@ for i = 1:N
     if obs_use(2)
         [borhaug.c_hat, borhaug.nu_hat, borhaug_aux] = ...
             borhaug_current_observer(borhaug.c_hat, borhaug.nu_hat, ...
-                nu_meas, tau_thr, psi, M_const, params, dt);
+                nu_meas, tau_thr, psi, M_const, params.borhaug, dt);
         borhaug.c_hist(i, :) = borhaug.c_hat';
     end
 
     % 3) EKF 观测器
     if obs_use(3)
         [ekf.x_hat, ekf.P, ekf_aux] = ...
-            ekf_current_estimator(ekf.x_hat, ekf.P, nu_meas, tau_thr, psi, M_const, params, dt);
+            ekf_current_estimator(ekf.x_hat, ekf.P, nu_meas, tau_thr, psi, M_const, params.ekf, dt);
         ekf.c_hist(i, :) = ekf_aux.c_hat';
     end
 

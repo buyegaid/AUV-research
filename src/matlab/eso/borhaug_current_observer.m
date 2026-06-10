@@ -67,9 +67,9 @@ e_nu = nu_meas - nu_hat;
 nu_dot = nu_dot_nom + params.K_nu * e_nu;
 
 %% 6. 海流观测器更新
-% K_c: 2×6 海流误差注入增益（仅用surge/sway通道）
+% K_c: 2×6 海流误差注入增益（surge/sway通道有非零增益，其余为0）
 % 原文中 Kc 的设计使得海流估计比速度估计收敛更慢
-c_dot = params.K_c * e_nu(1:2);  % 仅用水平面速度误差
+c_dot = params.K_c * e_nu;  % 2×6 × 6×1 = 2×1
 
 %% 7. GM时间传播（衰减项，使海流估计不会漂移）
 alpha = exp(-dt / params.tau_c);
