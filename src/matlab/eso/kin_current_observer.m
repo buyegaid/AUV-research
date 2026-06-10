@@ -1,74 +1,58 @@
-function [Vc_hat, beta_hat, x_hat, aux] = kin_current_observer(Vc_hat, beta_hat, x_hat, nu_meas, eta_meas, psi, theta, params, dt)
-% 运动学海流观测器（Liang et al. 2018 方法）
+function [c_hat, aux] = kin_current_observer(c_hat, nu_meas, psi, u_cmd, params, dt)
+% 运动学海流观测器（速度残差型, 2026-06-10重写）
 %
-% 基于AUV运动学方程: η̇ = J(η)·ν + νc_I
-% 其中 νc_I = [Vc·cos(βc), Vc·sin(βc), 0]' 是惯性系海流速度
+% 核心原理:
+%   DVL测量 ν_meas = ν_water + ν_c (对地 = 对水 + 海流)
+%   命令速度 u_cmd 近似对水速度（稳态时推力=阻力）
+%   海流 ≈ 测量速度 - 命令速度
 %
-% 观测器结构:
-%   η̂̇ = J(η)·ν_meas + V̂c_I + K4·(η - η̂)
-%   V̂̇c_I = K3·(η - η̂)
+%   ν_I = R(ψ)·ν_meas  → 惯性系对地速度
+%   ν̂_I = [u_cmd·cos(ψ); u_cmd·sin(ψ)] → 惯性系命令速度（无侧滑假设）
+%   海流残差 = ν_I(1:2) - ν̂_I
+%   ĉ̇ = K·(残差) − GM衰减
 %
 % 输入:
-%   Vc_hat:    海流速度估计 (m/s)
-%   beta_hat:  海流方向估计 (rad, 惯性系)
-%   x_hat:     3×1 位置估计 [xn; yn; zn] (m, NED)
-%   nu_meas:   6×1 测量速度 (对地, 体坐标系)
-%   eta_meas:  3×1 测量位置 [xn; yn; zn]
-%   psi:       航向角
-%   theta:     俯仰角
-%   params:    params.kin.* 参数
-%   dt:        时间步长
+%   c_hat:   2×1 惯性系海流估计 [cN; cE]
+%   nu_meas: 6×1 DVL对地速度
+%   psi:     航向角
+%   u_cmd:   纵荡命令速度 (m/s), 稳态时≈对水速度
+%   params:  params.kin.*
+%   dt:      时间步长
 %
-% 输出:
-%   Vc_hat, beta_hat: 更新后的海流估计
-%   x_hat:  更新后的位置估计
-%   aux:    诊断信息
-%
-% 参考:
-%   Liang et al. (2018), "Three-dimensional trajectory tracking control
-%   of an underactuated AUV based on ocean current observer"
-%   Int. J. Advanced Robotic Systems, 15(5)
+% 2026-06-10
 
 persistent is_init
-if isempty(is_init)
-    is_init = true;
-end
+if isempty(is_init), is_init = true; end
+if isempty(c_hat), c_hat = [0; 0]; end
 
-%% 1. 旋转矩阵（体坐标系 → NED 惯性系）
-[~, R_nb] = eulerang(theta, 0, psi);  % R_nb: 3×3 体坐标系→NED旋转矩阵
+%% 1. DVL对地速度 → 惯性系
+% 惯性系速度 = R_nb(ψ) * 体坐标系速度
+% ν_I = [cos(ψ)*u - sin(ψ)*v; sin(ψ)*u + cos(ψ)*v; w]
+u = nu_meas(1); v = nu_meas(2);
+nu_I_N =  cos(psi)*u - sin(psi)*v;
+nu_I_E =  sin(psi)*u + cos(psi)*v;
 
-% 体坐标系速度转换到惯性系
-nu_I = R_nb * nu_meas(1:3);
+%% 2. 命令速度 → 惯性系（假设无侧滑，对水速度≈命令速度）
+nu_cmd_N = u_cmd * cos(psi);
+nu_cmd_E = u_cmd * sin(psi);
 
-%% 2. 观测器动力学
-% 位置误差
-eta_err = eta_meas - x_hat;
+%% 3. 速度残差 = 对地速度 − 命令对水速度 ≈ 海流
+vel_res = [nu_I_N - nu_cmd_N; nu_I_E - nu_cmd_E];
 
-% 海流观测器更新（惯性系）
-Vc_I_dot = params.K3 * eta_err;
+%% 4. 海流积分更新
+c_dot = params.K3 .* vel_res;
 
-% 位置观测器
-x_hat_dot = nu_I + [Vc_hat*cos(beta_hat); Vc_hat*sin(beta_hat); 0] ...
-          + params.K4 * eta_err;
+% GM衰减
+alpha = exp(-dt / params.tau_c);
+c_dot = c_dot - (1-alpha)/dt * (c_hat - params.c_mean);
 
-%% 3. 数值积分
-Vc_I_est = [Vc_hat*cos(beta_hat); Vc_hat*sin(beta_hat); 0] + Vc_I_dot * dt;
-x_hat = x_hat + x_hat_dot * dt;
+%% 5. 欧拉积分
+c_hat = c_hat + c_dot * dt;
 
-%% 4. 提取 Vc 和 βc（从惯性系估计）
-Vc_hat_new = norm(Vc_I_est(1:2));
-beta_hat_new = atan2(Vc_I_est(2), Vc_I_est(1));
+%% 6. 约束
+c_hat = max(-params.c_max, min(params.c_max, c_hat));
 
-% 低通滤波（减少观测器噪声）
-alpha = params.lpf_alpha;
-Vc_hat = alpha * Vc_hat_new + (1-alpha) * Vc_hat;
-beta_hat = alpha * beta_hat_new + (1-alpha) * beta_hat;
-
-% 海流约束
-Vc_hat = max(0, min(params.Vc_max, Vc_hat));
-
-%% 5. 诊断
-aux.Vc_I_est = Vc_I_est;
-aux.eta_err = eta_err;
-aux.x_hat = x_hat;
+%% 7. 诊断
+aux.c_hat = c_hat;
+aux.vel_res = vel_res;
 end

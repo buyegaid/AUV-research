@@ -169,10 +169,13 @@ params.ekf.Q0 = 0.001;            % 默认过程噪声
 params.ekf.R0 = 0.01;             % 测量噪声（(m/s)²）
 params.ekf.jac_pert = 0.001;      % Jacobian数值扰动
 
-%% 运动学海流观测器参数（Liang 2018基线, 2026-06-04）
-params.kin.K3 = 0.05;             % 海流估计增益（低通，对应慢收敛）
-params.kin.K4 = 1.0;              % 位置观测器增益
-params.kin.lpf_alpha = 0.9;       % 输出低通滤波系数
-params.kin.Vc_max = 1.5;          % 流速上限
+%% 运动学海流观测器参数（速度残差型, 2026-06-10）
+% K3: 从速度残差 (m/s) → 海流变化率 (m/s²) 的增益
+%     收敛时间 ≈ 1/K3 ≈ 10s
+params.kin.K3 = [0.02; 0.02];     % 海流估计速度增益 [cN; cE] (1/s)
+                                   % 慢平均≈50s, 滤除转弯侧滑的周期性分量
+params.kin.tau_c = 100;           % GM海流相关时间常数 (s)
+params.kin.c_mean = [0; 0];       % 海流均值
+params.kin.c_max = 1.5;           % 海流上限
 
 end

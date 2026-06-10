@@ -36,9 +36,16 @@ nu_pred = nu_prev + a_model * dt;
 %% 3. 一步预测误差（仅水平面）
 e_vel = nu_meas(1:2) - nu_pred(1:2);
 
-%% 4. 海流自适应更新（带限幅的积分）
-dc = params.K_c .* e_vel * dt;
-dc = max(-params.max_dc*dt, min(params.max_dc*dt, dc));
+%% 4. 预测误差死区（防止无激励时错误更新）
+% 当 |e_vel| < eps_vel 时跳过更新，避免Børhaug在直线稳态崩塌
+eps_vel = 1e-5;  % 速度预测误差死区 (m/s)
+e_vel_mag = norm(e_vel);
+if e_vel_mag < eps_vel
+    dc = [0; 0];  % 无有效信号，不更新
+else
+    dc = params.K_c .* e_vel * dt;
+    dc = max(-params.max_dc*dt, min(params.max_dc*dt, dc));
+end
 c_hat = c_hat + dc;
 
 %% 5. GM衰减

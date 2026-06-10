@@ -139,7 +139,7 @@ M_const = compute_M_constant();
 
 %% ===== 观测器初始化 =====
 % KIN
-kin.Vc_hat = 0; kin.beta_hat = deg2rad(0); kin.x_hat = [xn0; yn0; zn0];
+kin.c_hat = [0; 0];
 
 % Børhaug
 borhaug.c_hat = [0; 0];
@@ -209,12 +209,11 @@ for i = 1:N
 
     % ---- 运行各观测器 ----
 
-    % 1) KIN 运动学观测器
+    % 1) KIN 运动学观测器（速度残差: DVL对地 vs 命令对水）
     if obs_use(1)
-        [kin.Vc_hat, kin.beta_hat, kin.x_hat, kin_aux] = ...
-            kin_current_observer(kin.Vc_hat, kin.beta_hat, kin.x_hat, ...
-                nu_meas, eta_meas, psi, 0, params.kin, dt);
-        kin.c_hist(i, :) = [kin.Vc_hat*cos(kin.beta_hat); kin.Vc_hat*sin(kin.beta_hat)]';
+        [kin.c_hat, kin_aux] = ...
+            kin_current_observer(kin.c_hat, nu_meas, psi, u_d, params.kin, dt);
+        kin.c_hist(i, :) = kin.c_hat';
     end
 
     % 2) Børhaug 2007 观测器（速度预测型，模型基PI）
