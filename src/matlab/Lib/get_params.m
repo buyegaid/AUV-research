@@ -147,6 +147,20 @@ params.ucco.delta_coupling = [0.05; 0.03; 0.03; 0; 0.05; 0.05];   % 耦合项不
 params.ucco.delta_thruster = 0.02;  % 推进器模型不确定性
 params.ucco.delta_sensor = 0.01;    % 传感器噪声界
 
+%% Børhaug 2007 模型基非线性Luenberger海流观测器（2026-06-10）
+% 速度观测器增益（对角阵，ω_nu ≈ 1-2 rad/s）
+K_nu_base = 1.5;
+params.borhaug.K_nu = diag([K_nu_base, K_nu_base, K_nu_base, ...  % surge/sway/heave
+                             K_nu_base, K_nu_base, K_nu_base]);    % roll/pitch/yaw
+% 海流观测器增益（2×6，仅用surge/sway速度误差驱动海流估计）
+% K_c 设计为比 K_nu 小约一个量级，使海流估计慢于速度估计
+K_c_base = 0.2;
+params.borhaug.K_c = [K_c_base, 0, 0, 0, 0, 0;  % cN ← u误差
+                       0, K_c_base, 0, 0, 0, 0]; % cE ← v误差
+params.borhaug.tau_c = 100;           % GM海流相关时间常数 (s)
+params.borhaug.c_mean = [0; 0];       % 海流均值 [cN; cE] (m/s)
+params.borhaug.c_max = 1.5;           % 海流最大速度 (m/s)
+
 %% CFD-Augmented EKF参数（强基线, 2026-06-04）
 params.ekf.use_bias = true;       % 是否增广力偏置状态
 params.ekf.tau_c = 100;           % 海流GM时间常数

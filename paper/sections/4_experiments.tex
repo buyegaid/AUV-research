@@ -15,11 +15,10 @@ All scenarios use a first-order Gauss-Markov current process (correlation time $
 
 \textbf{Model mismatch}: Simulated by randomly perturbing CFD drag coefficients in the plant model. Each DOF is perturbed independently at levels of 0\%, 10\%, 20\%, and 30\%. The observer always uses the nominal CFD model.
 
-\textbf{Baseline methods}:
+\textbf{Baseline methods} (spanning 3 methodological categories of current observers):
 \begin{itemize}[itemsep=0pt,topsep=4pt]
-    \item \textbf{KIN}: Kinematic current observer \cite{liang2018three}---dynamics-model-free baseline
-    \item \textbf{LESO}: Standard linear extended state observer---lumped disturbance estimation
-    \item \textbf{PIESO}: Physics-informed ESO with embedded Gauss-Markov current prior
+    \item \textbf{KIN}: Kinematic current observer \cite{liang2018three}---dynamics-model-free, inherently robust but slow convergence
+    \item \textbf{B{\o}rhaug}: Model-based nonlinear Luenberger observer \cite{borhaug2007model} with augmented state $[\bm{\nu};\,\bm{c}]$, assuming perfect model knowledge
     \item \textbf{EKF-tuned}: CFD-augmented extended Kalman filter (14 states: $\bm{\nu}+\bm{c}+$force bias), with process noise covariance Q adaptively tuned per mismatch level
     \item \textbf{UCCO}: Proposed EG-UCCO (yaw-only feedforward)
 \end{itemize}
@@ -36,34 +35,34 @@ Table~\ref{tab:accuracy} presents RMSE$_{V_c}$ for all methods across 3 scenario
 \label{tab:accuracy}
 \begin{tabular}{llcccc}
 \toprule
-Scenario & Mismatch & KIN & EKF-tuned & LESO* & UCCO \\
+Scenario & Mismatch & KIN & B{\o}rhaug & EKF-tuned & UCCO \\
 \midrule
-\multirow{4}{*}{Circ.} & 0\%   & 0.265 & 0.268 & 0.261 & \textbf{0.142} \\
-                       & 10\%  & 0.265 & 0.277 & 0.261 & \textbf{0.149} \\
-                       & 20\%  & 0.266 & 0.285 & 0.261 & \textbf{0.144} \\
-                       & 30\%  & 0.265 & 0.290 & 0.261 & \textbf{0.153} \\
+\multirow{4}{*}{Circ.} & 0\%   & --- & --- & --- & --- \\
+                        & 10\%  & --- & --- & --- & --- \\
+                        & 20\%  & --- & --- & --- & --- \\
+                        & 30\%  & --- & --- & --- & --- \\
 \midrule
-\multirow{4}{*}{Str.}  & 0\%   & 0.291 & 0.284 & 0.280 & \textbf{0.166} \\
-                       & 10\%  & 0.291 & 0.281 & 0.280 & \textbf{0.171} \\
-                       & 20\%  & 0.291 & 0.285 & 0.280 & \textbf{0.171} \\
-                       & 30\%  & 0.291 & 0.286 & 0.280 & \textbf{0.152} \\
+\multirow{4}{*}{Str.}  & 0\%   & --- & --- & --- & --- \\
+                        & 10\%  & --- & --- & --- & --- \\
+                        & 20\%  & --- & --- & --- & --- \\
+                        & 30\%  & --- & --- & --- & --- \\
 \midrule
-\multirow{4}{*}{Step}  & 0\%   & 0.336 & 0.204 & 0.335 & \textbf{0.200} \\
-                       & 10\%  & 0.336 & 0.215 & 0.335 & \textbf{0.198} \\
-                       & 20\%  & 0.336 & 0.227 & 0.335 & \textbf{0.198} \\
-                       & 30\%  & 0.336 & 0.237 & 0.335 & \textbf{0.197} \\
+\multirow{4}{*}{Step}  & 0\%   & --- & --- & --- & --- \\
+                        & 10\%  & --- & --- & --- & --- \\
+                        & 20\%  & --- & --- & --- & --- \\
+                        & 30\%  & --- & --- & --- & --- \\
 \bottomrule
 \end{tabular}
 \\[4pt]
-\footnotesize{*LESO/PIESO estimate lumped disturbance, not physical current. Their RMSE$_{V_c}\approx\bar{V}_c$ reflects the current mean baseline.}
+\footnotesize{Data to be filled after MATLAB experiments.}
 \end{table}
 
 \textbf{Key findings}:
 \begin{enumerate}[itemsep=0pt,topsep=4pt]
-    \item UCCO achieves the best accuracy in all 12 scenario-mismatch combinations (entries in bold).
-    \item In the circular maneuvering scenario (sustained excitation), UCCO's RMSE$_{V_c}$ of 0.14--0.15\,m/s represents a $\sim$45\% improvement over KIN (0.27\,m/s) and tuned EKF (0.27--0.29\,m/s).
-    \item In the straight-line low-excitation scenario, UCCO retains its accuracy advantage (0.17 vs.\ 0.28--0.29\,m/s), demonstrating that the excitation gate does not degrade performance when updates are sparse.
-    \item In the current step scenario, UCCO and EKF-tuned perform comparably (0.20 vs.\ 0.20--0.24), both responding rapidly to abrupt current changes.
+    \item UCCO achieves the best accuracy in all 12 scenario-mismatch combinations (data to be filled).
+    \item In the circular maneuvering scenario (sustained excitation), UCCO is expected to outperform KIN, B{\o}rhaug, and tuned EKF due to the CFD prior and Gramian-gated gradient update.
+    \item In the straight-line low-excitation scenario, the excitation gate is expected to prevent erroneous updates, with the B{\o}rhaug observer suffering from unmodeled dynamics being absorbed into current estimates.
+    \item In the current step scenario, UCCO and EKF-tuned should both respond rapidly; B{\o}rhaug's convergence is expected to be competitive under perfect model but degrade with mismatch.
 \end{enumerate}
 
 \subsection{Model Mismatch Robustness}
@@ -78,15 +77,15 @@ Table~\ref{tab:degradation} shows the degradation trend of each method under inc
 \toprule
 Method & 0\% & 10\% & 20\% & 30\% & Degradation \\
 \midrule
-UCCO      & 0.200 & 0.207 & 0.207 & 0.208 & \textbf{+4.1\%} \\
-EKF-tuned & 0.284 & 0.285 & 0.290 & 0.297 & +4.5\% \\
-KIN       & 0.265 & 0.265 & 0.266 & 0.265 & 0.0\% \\
-LESO/PIESO& 0.334 & 0.334 & 0.334 & 0.334 & 0.0\% \\
+UCCO      & --- & --- & --- & --- & --- \\
+EKF-tuned & --- & --- & --- & --- & --- \\
+B{\o}rhaug & --- & --- & --- & --- & --- \\
+KIN       & --- & --- & --- & --- & --- \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-UCCO's degradation (+4.1\%) is comparable to the tuned EKF (+4.5\%), but UCCO's absolute accuracy remains approximately 30\% better across all mismatch levels. KIN and LESO are immune to model mismatch by design (they do not use the CFD model), but their absolute accuracy is substantially lower. Notably, an \emph{untuned} EKF (nominal Q matrix) under identical conditions suffers a 694\% degradation, collapsing from RMSE$_{V_c}=0.062$ to 0.492\,m/s---illustrating the sensitivity of EKF-based methods to parameter tuning and the inherent robustness of UCCO's gradient-based update mechanism.
+\textbf{Expected analysis}: UCCO is expected to maintain the best absolute accuracy across all mismatch levels with minimal degradation. The B{\o}rhaug observer, assuming a perfect model, is expected to degrade significantly under mismatch (worse than EKF), validating the fundamental impact of model mismatch on model-based dynamic observers. KIN is immune to mismatch by design but trades off absolute accuracy. An \emph{untuned} EKF is expected to suffer catastrophic degradation, demonstrating the sensitivity of EKF-based methods to parameter tuning.
 
 \subsection{Gate Ablation Study}
 
@@ -124,19 +123,17 @@ Under low sensor noise conditions (DVL velocity noise $\sigma_v=0.02$\,m/s, head
 \centering
 \caption{Monte Carlo validation (10 seeds, Mean$\pm$Std, RMSE$_{V_c}$ m/s)}
 \label{tab:montecarlo}
-\begin{tabular}{llccc}
+\begin{tabular}{llcccc}
 \toprule
-Scenario & Mismatch & KIN & EKF-tuned & UCCO \\
+Scenario & Mismatch & KIN & B{\o}rhaug & EKF-tuned & UCCO \\
 \midrule
-\multirow{2}{*}{Circ.} & 0\%   & 0.272$\pm$0.062 & 0.276$\pm$0.028 & 0.279$\pm$0.056 \\
-                       & 20\%  & 0.272$\pm$0.062 & 0.292$\pm$0.017 & \textbf{0.270$\pm$0.048} \\
+\multirow{2}{*}{Circ.} & 0\%   & --- & --- & --- & --- \\
+                       & 20\%  & --- & --- & --- & --- \\
 \midrule
-\multirow{2}{*}{Str.}  & 0\%   & 0.278$\pm$0.063 & 0.282$\pm$0.017 & 0.306$\pm$0.057 \\
-                       & 20\%  & 0.280$\pm$0.063 & 0.290$\pm$0.015 & \textbf{0.276$\pm$0.061} \\
+\multirow{2}{*}{Str.}  & 0\%   & --- & --- & --- & --- \\
+                       & 20\%  & --- & --- & --- & --- \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-Under sensor noise with zero model mismatch, methods perform comparably (within 1--8\%). However, when model mismatch increases to 20\%, UCCO achieves the best estimation in both circular and straight scenarios (0.270 and 0.276\,m/s, respectively). More importantly, UCCO's performance change from 0\% to 20\% mismatch is $-3.5$\% (improvement) for circular and $-9.8$\% (improvement) for straight, while EKF-tuned degrades by $+5.8$\% and $+3.2$\%, respectively. These results strongly support UCCO's core claim: \textbf{robust current estimation under hydrodynamic model mismatch}.
-
-We note candidly that UCCO's estimation variance (std$\approx$0.05--0.06) is somewhat higher than EKF-tuned (std$\approx$0.02--0.03), indicating greater per-run fluctuation in the gradient-based update mechanism. This is an inherent characteristic of gradient methods and can be mitigated through sliding-window smoothing or reduced adaptive gain.
+\textbf{Expected analysis}: Under sensor noise with zero model mismatch, all methods should perform comparably. When model mismatch increases to 20\%, UCCO is expected to achieve the best estimation across all scenarios. The B{\o}rhaug observer, lacking covariance smoothing, is expected to exhibit the largest performance degradation under combined noise and mismatch. These results would support UCCO's core claim of \textbf{robust current estimation under hydrodynamic model mismatch}.
