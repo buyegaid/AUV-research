@@ -61,7 +61,7 @@ if ThrMode == 1
 
     % xhy.m PWM模式的配置
     opt_xhy.mode = 'pwm';
-    opt_xhy.thruster_params = {p_m080_main, p_m060_vert, p_m060_vert, p_m060_side, p_m060_side};
+    opt_xhy.thruster_params = {p_m060_vert, p_m060_vert, p_m060_side, p_m060_side, p_m080_main};
     opt_xhy.voltage_v = 24.0;
 
     % 推力分配参数（xhy_force_moment_to_pwm 使用）
@@ -161,7 +161,7 @@ for i = 1:N
     if ThrMode == 1
         fw_cmd = cal.tau_N_to_can_g(tau_cmd);
         [pwm_us_doc, ~] = xhy_force_moment_to_pwm(fw_cmd, alloc_params, alloc_params.pwm_prev_doc);
-        ui = [pwm_us_doc(5); pwm_us_doc(1:4)];  % doc→dyn顺序
+        ui = pwm_us_doc;  % 统一顺序 [T1 T2 T3 T4 T5]
         alloc_params.pwm_prev_doc = pwm_us_doc;
     else
         [ui, ~] = thrust_allocation_xhy(tau_cmd, thr_params);

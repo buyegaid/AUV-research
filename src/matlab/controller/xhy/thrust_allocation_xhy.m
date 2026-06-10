@@ -20,16 +20,16 @@ function [n_rpm, info] = thrust_allocation_xhy(tau_cmd, params)
 %       .x_side_r       后侧向推进器x位置 (m)
 %
 %   输出:
-%     n_rpm: 5x1 推进器转速 [n_main n_vert1 n_vert2 n_side1 n_side2]' (RPM)
+%     n_rpm: 5x1 推进器转速 [T1 T2 T3 T4 T5]' (RPM)
 %     info:  诊断信息结构体
 %
 %   推力分配矩阵 (来自xhy.m):
-%     B_thr = [1   0           0           0         0      ;  % X (surge)
-%              0   0           0           1         1      ;  % Y (sway)
-%              0   1           1           0         0      ;  % Z (heave)
+%     B_thr = [0   0           0           0         1      ;  % X (surge)
+%              0   0           1           1         0      ;  % Y (sway)
+%              1   1           0           0         0      ;  % Z (heave)
 %              0   0           0           0         0      ;  % K (roll, 不可控)
-%              0  -x_vert_f   -x_vert_r    0         0      ;  % M (pitch)
-%              0   0           0           x_side_f  x_side_r]; % N (yaw)
+%             -x_vert_f -x_vert_r 0        0         0      ;  % M (pitch)
+%              0   0           x_side_f    x_side_r  0];       % N (yaw)
 %
 %   推力模型: T = rho * D^4 * KT * |n| * n  (n单位: rps)
 %   主推和辅推使用不同的D和KT，正反转KT独立
@@ -66,9 +66,9 @@ rho = params.rho;
 n_max = params.n_max;
 
 % 每个推进器的直径和推力系数（区分主推/辅推，正转/反转）
-D_arr  = [params.D_prop_main; params.D_prop_aux; params.D_prop_aux; params.D_prop_aux; params.D_prop_aux];
-KT_fwd_arr = [params.KT_main_fwd; params.KT_aux_fwd; params.KT_aux_fwd; params.KT_aux_fwd; params.KT_aux_fwd];
-KT_rev_arr = [params.KT_main_rev; params.KT_aux_rev; params.KT_aux_rev; params.KT_aux_rev; params.KT_aux_rev];
+D_arr  = [params.D_prop_aux; params.D_prop_aux; params.D_prop_aux; params.D_prop_aux; params.D_prop_main];
+KT_fwd_arr = [params.KT_aux_fwd; params.KT_aux_fwd; params.KT_aux_fwd; params.KT_aux_fwd; params.KT_main_fwd];
+KT_rev_arr = [params.KT_aux_rev; params.KT_aux_rev; params.KT_aux_rev; params.KT_aux_rev; params.KT_main_rev];
 
 % 推力分配矩阵（统一来源，消除重复定义）
 [B_thr, pos] = xhy_thruster_geometry();

@@ -40,8 +40,8 @@ title('纵荡速度'); grid on;
 subplot(2,3,5);
 plot(t, ui);
 xlabel('t (s)'); ylabel('RPM');
-title('推进器转速');
-legend('主推','垂直1','垂直2','侧向1','侧向2'); grid on;
+title('推进器输入');
+legend('T1前垂推','T2后垂推','T3前侧推','T4后侧推','T5主推'); grid on;
 
 % 深度
 subplot(2,3,6);

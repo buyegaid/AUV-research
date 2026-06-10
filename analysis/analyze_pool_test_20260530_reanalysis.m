@@ -5,7 +5,7 @@
 %   1. debug_data260530-1.csv 中 force_cmd 是下发到 CAN 分配逻辑的原始输入。
 %   2. 平动力 TX/TY/TZ 按 CAN-g 输入处理。
 %   3. 转动力矩 MX/MY/MZ 按原始力矩输入处理，进入分配矩阵前不再额外乘 100。
-%   4. 推进器顺序采用文档顺序 [T1 T2 T3 T4 T5]，动力学矩阵顺序采用 [T5 T1 T2 T3 T4]。
+%   4. 推进器顺序统一采用文档顺序 [T1 T2 T3 T4 T5]。
 
 clear; clc;
 
@@ -36,24 +36,13 @@ vel_names = {'u', 'v', 'w', 'p', 'q', 'r'};
 thruster_names = {'T1 前垂推', 'T2 后垂推', 'T3 前侧推', 'T4 后侧推', 'T5 主推'};
 
 % 当前 XHY 几何，与 model/xhy.m 保持一致。
-x_vert_f = +0.344;
-x_vert_r = -0.293;
-x_side_f = +0.424;
-x_side_r = -0.376;
-B_thr = [
-    1,  0,          0,          0,        0;
-    0,  0,          0,          1,        1;
-    0,  1,          1,          0,        0;
-    0,  0,          0,          0,        0;
-    0, -x_vert_f,  -x_vert_r,   0,        0;
-    0,  0,          0,          x_side_f, x_side_r
-    ];
+[B_thr, pos] = xhy_thruster_geometry();
+x_vert_r = pos.x_vert_r;
 
 % 使用当前质量矩阵对角线做局部灰箱检查。
 M_diag = [101.642, 210.562, 128.702, 1.43314, 7.21453, 6.51361]';
 
 alloc_params = struct();
-alloc_params.moment_scale = 1;       % debug 中的力矩列已经是原始分配输入，不再按物理 N*m 放大。
 alloc_params.enable_ramp = false;    % 离线分析使用每个采样点的静态映射。
 
 m060_params = m060_thruster_params();
@@ -76,8 +65,8 @@ s4 = m060_thruster_model(pwm_us(:, 4), voltage, m060_params);
 s5 = m080_thruster_model(pwm_us(:, 5), voltage, m080_params);
 thrust_model_n = [s1.thrust_n, s2.thrust_n, s3.thrust_n, s4.thrust_n, s5.thrust_n];
 
-T_vec_nominal = [s5.thrust_n, s1.thrust_n, s2.thrust_n, s3.thrust_n, s4.thrust_n];
-T_vec_fault = [s5.thrust_n, zeros(N, 1), s2.thrust_n, s3.thrust_n, s4.thrust_n];
+T_vec_nominal = [s1.thrust_n, s2.thrust_n, s3.thrust_n, s4.thrust_n, s5.thrust_n];
+T_vec_fault = [zeros(N, 1), s2.thrust_n, s3.thrust_n, s4.thrust_n, s5.thrust_n];
 tau_nominal = (B_thr * T_vec_nominal')';
 tau_t1_fault = (B_thr * T_vec_fault')';
 
@@ -146,13 +135,12 @@ function [pwm_us, thrust_g] = force_cmd_to_pwm_batch(force_cmd, alloc_params)
 params = info0.params;
 
 alloc_cmd = force_cmd;
-alloc_cmd(:, 4:6) = alloc_cmd(:, 4:6) .* params.moment_scale;
 
 K = [
-    0,   0,  -0.5, 0,  0.0083,  0;
-    0,   0,  -0.5, 0, -0.0083,  0;
-    0,  -0.5, 0,   0,  0,      -0.0083;
-    0,  -0.5, 0,   0,  0,       0.0083;
+    0,   0,  -0.5, 0,  0.83,  0;
+    0,   0,  -0.5, 0, -0.83,  0;
+    0,  -0.5, 0,   0,  0,    -0.83;
+    0,  -0.5, 0,   0,  0,     0.83;
     1.0, 0,   0,   0,  0,       0
     ];
 

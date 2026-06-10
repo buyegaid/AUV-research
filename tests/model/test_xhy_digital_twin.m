@@ -27,7 +27,7 @@ fprintf('  M060 T3/T4侧推: fwd=%.4f, rev=%.4f\n', p_m060_s.thrust_gain_forward
 
 % xhy 数字孪生模式配置
 opt.mode = 'pwm';
-opt.thruster_params = {p_m080, p_m060_v, p_m060_v, p_m060_s, p_m060_s};
+opt.thruster_params = {p_m060_v, p_m060_v, p_m060_s, p_m060_s, p_m080};
 opt.voltage_v = 24.0;
 
 fprintf('\n===== 1. 单轴阶跃测试 =====\n');
@@ -39,16 +39,16 @@ fw_cmd = cal.tau_N_to_can_g(tau_cmd);
 fprintf('tau_cmd: X=%.1f N → TX=%.0f CAN-g\n', tau_cmd(1), fw_cmd(1));
 
 [pwm_doc, alloc_info] = xhy_force_moment_to_pwm(fw_cmd);
-pwm_dyn = [pwm_doc(5); pwm_doc(1:4)];
-fprintf('PWM (dyn order): T5=%.0f, T1=%.0f, T2=%.0f, T3=%.0f, T4=%.0f us\n', pwm_dyn);
+pwm = pwm_doc;
+fprintf('PWM: T1=%.0f, T2=%.0f, T3=%.0f, T4=%.0f, T5=%.0f us\n', pwm);
 
 % 直接调用推进器模型
-t5_state = m080_thruster_model(pwm_dyn(1), 24.0, p_m080);
-t1_state = m060_thruster_model(pwm_dyn(2), 24.0, p_m060_v);
-t2_state = m060_thruster_model(pwm_dyn(3), 24.0, p_m060_v);
-t3_state = m060_thruster_model(pwm_dyn(4), 24.0, p_m060_s);
-t4_state = m060_thruster_model(pwm_dyn(5), 24.0, p_m060_s);
-T_vec = [t5_state.thrust_n; t1_state.thrust_n; t2_state.thrust_n; t3_state.thrust_n; t4_state.thrust_n];
+t1_state = m060_thruster_model(pwm(1), 24.0, p_m060_v);
+t2_state = m060_thruster_model(pwm(2), 24.0, p_m060_v);
+t3_state = m060_thruster_model(pwm(3), 24.0, p_m060_s);
+t4_state = m060_thruster_model(pwm(4), 24.0, p_m060_s);
+t5_state = m080_thruster_model(pwm(5), 24.0, p_m080);
+T_vec = [t1_state.thrust_n; t2_state.thrust_n; t3_state.thrust_n; t4_state.thrust_n; t5_state.thrust_n];
 
 [B_thr, ~] = xhy_thruster_geometry();
 tau_actual = B_thr * T_vec;
@@ -66,17 +66,17 @@ fw_cmd = cal.tau_N_to_can_g(tau_cmd);
 fprintf('tau_cmd: Z=%.1f N → TZ=%.0f CAN-g\n', tau_cmd(3), fw_cmd(3));
 
 [pwm_doc, ~] = xhy_force_moment_to_pwm(fw_cmd);
-pwm_dyn = [pwm_doc(5); pwm_doc(1:4)];
+pwm = pwm_doc;
 
-t5_s = m080_thruster_model(pwm_dyn(1), 24.0, p_m080);
-t1_s = m060_thruster_model(pwm_dyn(2), 24.0, p_m060_v);
-t2_s = m060_thruster_model(pwm_dyn(3), 24.0, p_m060_v);
-t3_s = m060_thruster_model(pwm_dyn(4), 24.0, p_m060_s);
-t4_s = m060_thruster_model(pwm_dyn(5), 24.0, p_m060_s);
-T_vec = [t5_s.thrust_n; t1_s.thrust_n; t2_s.thrust_n; t3_s.thrust_n; t4_s.thrust_n];
+t1_s = m060_thruster_model(pwm(1), 24.0, p_m060_v);
+t2_s = m060_thruster_model(pwm(2), 24.0, p_m060_v);
+t3_s = m060_thruster_model(pwm(3), 24.0, p_m060_s);
+t4_s = m060_thruster_model(pwm(4), 24.0, p_m060_s);
+t5_s = m080_thruster_model(pwm(5), 24.0, p_m080);
+T_vec = [t1_s.thrust_n; t2_s.thrust_n; t3_s.thrust_n; t4_s.thrust_n; t5_s.thrust_n];
 tau_actual = B_thr * T_vec;
 
-fprintf('推力: T1=%.2f, T2=%.2f N (垂推)\n', T_vec(2), T_vec(3));
+fprintf('推力: T1=%.2f, T2=%.2f N (垂推)\n', T_vec(1), T_vec(2));
 fprintf('Heave 误差: cmd=%.1f N, actual=%.2f N, rel=%.1f%%\n', ...
     tau_cmd(3), tau_actual(3), abs(tau_actual(3)-tau_cmd(3))/abs(tau_cmd(3))*100);
 
@@ -87,16 +87,16 @@ fw_cmd = cal.tau_N_to_can_g(tau_cmd);
 fprintf('tau_cmd: N=%.2f N·m → MZ=%.0f CAN-g\n', tau_cmd(6), fw_cmd(6));
 
 [pwm_doc, ~] = xhy_force_moment_to_pwm(fw_cmd);
-pwm_dyn = [pwm_doc(5); pwm_doc(1:4)];
-fprintf('PWM (dyn): T3=%.0f, T4=%.0f us (侧推差动)\n', pwm_dyn(4), pwm_dyn(5));
+pwm = pwm_doc;
+fprintf('PWM: T3=%.0f, T4=%.0f us (侧推差动)\n', pwm(3), pwm(4));
 
-t5_s = m080_thruster_model(pwm_dyn(1), 24.0, p_m080);
-t3_s = m060_thruster_model(pwm_dyn(4), 24.0, p_m060_s);
-t4_s = m060_thruster_model(pwm_dyn(5), 24.0, p_m060_s);
-T_vec = [t5_s.thrust_n; 0; 0; t3_s.thrust_n; t4_s.thrust_n];
+t3_s = m060_thruster_model(pwm(3), 24.0, p_m060_s);
+t4_s = m060_thruster_model(pwm(4), 24.0, p_m060_s);
+t5_s = m080_thruster_model(pwm(5), 24.0, p_m080);
+T_vec = [0; 0; t3_s.thrust_n; t4_s.thrust_n; t5_s.thrust_n];
 tau_actual = B_thr * T_vec;
 
-fprintf('推力: T3=%.3f, T4=%.3f N\n', T_vec(4), T_vec(5));
+fprintf('推力: T3=%.3f, T4=%.3f N\n', T_vec(3), T_vec(4));
 fprintf('Yaw 误差: cmd=%.2f N·m, actual=%.3f N·m, rel=%.1f%%\n', ...
     tau_cmd(6), tau_actual(6), abs(tau_actual(6)-tau_cmd(6))/abs(tau_cmd(6))*100);
 
@@ -140,9 +140,8 @@ fprintf('\n===== 3. 全链路自洽检验 =====\n');
 tx_test = 6400;  % 水池参考工作点
 fw_test = [tx_test; 0; 0; 0; 0; 0];
 [pwm_doc, ~] = xhy_force_moment_to_pwm(fw_test);
-pwm_dyn = [pwm_doc(5); pwm_doc(1:4)];
-t5_s = m080_thruster_model(pwm_dyn(1), 24.0, p_m080);
-tau_test = B_thr * [t5_s.thrust_n; 0; 0; 0; 0];
+t5_s = m080_thruster_model(pwm_doc(5), 24.0, p_m080);
+tau_test = B_thr * [0; 0; 0; 0; t5_s.thrust_n];
 k_X_actual = tau_test(1) / tx_test;
 fprintf('\nSurge: k_X(水池)=%.6f, k_X(标定后)=%.6f N/CAN-g, 误差=%.2f%%\n', ...
     cal.k_X, k_X_actual, abs(k_X_actual-cal.k_X)/abs(cal.k_X)*100);
@@ -151,10 +150,9 @@ fprintf('\nSurge: k_X(水池)=%.6f, k_X(标定后)=%.6f N/CAN-g, 误差=%.2f%%\n
 tz_test = 8000;
 fw_test = [0; 0; tz_test; 0; 0; 0];
 [pwm_doc, ~] = xhy_force_moment_to_pwm(fw_test);
-pwm_dyn = [pwm_doc(5); pwm_doc(1:4)];
-t1_s = m060_thruster_model(pwm_dyn(2), 24.0, p_m060_v);
-t2_s = m060_thruster_model(pwm_dyn(3), 24.0, p_m060_v);
-tau_test = B_thr * [0; t1_s.thrust_n; t2_s.thrust_n; 0; 0];
+t1_s = m060_thruster_model(pwm_doc(1), 24.0, p_m060_v);
+t2_s = m060_thruster_model(pwm_doc(2), 24.0, p_m060_v);
+tau_test = B_thr * [t1_s.thrust_n; t2_s.thrust_n; 0; 0; 0];
 k_Z_actual = tau_test(3) / tz_test;
 fprintf('Heave: k_Z(水池)=%.6f, k_Z(标定后)=%.6f N/CAN-g, 误差=%.2f%%\n', ...
     cal.k_Z, k_Z_actual, abs(k_Z_actual-cal.k_Z)/abs(cal.k_Z)*100);

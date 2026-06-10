@@ -40,7 +40,7 @@ betaVc = params.current.betaVc;
 wc = params.current.wc;
 
 % 推进器初始化
-ui = [600; 0; 0; 0; 0];  % [n_main n_vert1 n_vert2 n_side1 n_side2]' (RPM)
+ui = [0; 0; 0; 0; 600];  % [T1 T2 T3 T4 T5]' (RPM)
 n_max = 2500;
 r_max = params.auv.r_max;
 q_max = params.auv.q_max;

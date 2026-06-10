@@ -151,22 +151,22 @@ Vc = 0; betaVc = 0; w_c = 0; h = 0.05; T_sim = 200;
 
 % Surge
 x = zeros(12,1);
-for t = 0:h:T_sim, x = x + h * xhy(x, [2500 0 0 0 0]', Vc, betaVc, w_c); end
+for t = 0:h:T_sim, x = x + h * xhy(x, [0 0 0 0 2500]', Vc, betaVc, w_c); end
 fprintf('Surge: u=%.2f m/s  (实测max=%.2f, ratio=%.2f)\n', x(1), u_max, x(1)/u_max);
 
 % Sway
 x = zeros(12,1);
-for t = 0:h:T_sim, x = x + h * xhy(x, [0 0 0 2500 2500]', Vc, betaVc, w_c); end
+for t = 0:h:T_sim, x = x + h * xhy(x, [0 0 2500 2500 0]', Vc, betaVc, w_c); end
 fprintf('Sway:  v=%.3f m/s (实测max=%.3f, ratio=%.2f)\n', x(2), v_max, x(2)/v_max);
 
 % Heave
 x = zeros(12,1);
-for t = 0:h:T_sim, x = x + h * xhy(x, [0 2500 2500 0 0]', Vc, betaVc, w_c); end
+for t = 0:h:T_sim, x = x + h * xhy(x, [2500 2500 0 0 0]', Vc, betaVc, w_c); end
 fprintf('Heave: w=%.3f m/s (实测max=%.3f, ratio=%.2f)\n', x(3), w_max, x(3)/w_max);
 
 % Yaw
 x = zeros(12,1);
-for t = 0:h:T_sim, x = x + h * xhy(x, [0 0 0 2500 -2500]', Vc, betaVc, w_c); end
+for t = 0:h:T_sim, x = x + h * xhy(x, [0 0 2500 -2500 0]', Vc, betaVc, w_c); end
 fprintf('Yaw:   r=%.0f deg/s (实测max=%.0f, ratio=%.2f)\n', rad2deg(x(6)), rad2deg(r_max), rad2deg(x(6))/rad2deg(r_max));
 
 fprintf('\n校准完成! 所有通道ratio应接近1.0\n');

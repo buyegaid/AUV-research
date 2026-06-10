@@ -3,7 +3,7 @@ function [xdot, tau_thr, thr] = xhy_pwm_test_step(x, pwm_us, voltage_v, Vc, beta
 %
 % 输入:
 %   x         12x1 状态 [u v w p q r x y z phi theta psi]'
-%   pwm_us    5x1 PWM 脉宽, 顺序 [M080主推 M060前垂推 M060后垂推 M060前侧推 M060后侧推]'
+%   pwm_us    5x1 PWM 脉宽, 顺序 [T1前垂推 T2后垂推 T3前侧推 T4后侧推 T5主推]'
 %   voltage_v 供电电压(V), 标量或 5x1
 %   Vc,betaVc,w_c 海流参数, 与 xhy.m 保持一致
 %
@@ -34,34 +34,22 @@ end
 % 先用零推进器调用 xhy, 获取当前状态下的基础动力学项。
 [xdot, ~, M, ~, ~, ~, ~] = xhy(x, zeros(5,1), Vc, betaVc, w_c);
 
-main_state  = m080_thruster_model(pwm_us(1), voltage_v(1));
-vert1_state = m060_thruster_model(pwm_us(2), voltage_v(2));
-vert2_state = m060_thruster_model(pwm_us(3), voltage_v(3));
-side1_state = m060_thruster_model(pwm_us(4), voltage_v(4));
-side2_state = m060_thruster_model(pwm_us(5), voltage_v(5));
+vert1_state = m060_thruster_model(pwm_us(1), voltage_v(1));
+vert2_state = m060_thruster_model(pwm_us(2), voltage_v(2));
+side1_state = m060_thruster_model(pwm_us(3), voltage_v(3));
+side2_state = m060_thruster_model(pwm_us(4), voltage_v(4));
+main_state  = m080_thruster_model(pwm_us(5), voltage_v(5));
 
 T_vec = [
-    main_state.thrust_n;
     vert1_state.thrust_n;
     vert2_state.thrust_n;
     side1_state.thrust_n;
-    side2_state.thrust_n
+    side2_state.thrust_n;
+    main_state.thrust_n
     ];
 
 % 推进器几何与 xhy.m 保持一致。
-x_vert_f = +0.344;
-x_vert_r = -0.293;
-x_side_f = +0.424;
-x_side_r = -0.376;
-
-B_thr = [
-    1,  0,         0,         0,        0;
-    0,  0,         0,         1,        1;
-    0,  1,         1,         0,        0;
-    0,  0,         0,         0,        0;
-    0, -x_vert_f, -x_vert_r,  0,        0;
-    0,  0,         0,         x_side_f, x_side_r
-    ];
+[B_thr, ~] = xhy_thruster_geometry();
 
 tau_thr = B_thr * T_vec;
 xdot(1:6) = xdot(1:6) + M \ tau_thr;

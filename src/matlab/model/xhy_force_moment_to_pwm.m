@@ -10,8 +10,6 @@ function [pwm_us, info] = xhy_force_moment_to_pwm(tau_cmd, params, pwm_prev_us)
 %                 默认单位按 Obsidian《推力分配》文档:
 %                 TX/TY/TZ 为 g, MX/MY/MZ 为 N*m。
 %     params      可选参数结构体:
-%                 .moment_scale  力矩进入分配矩阵前的倍率, 默认 100
-%                                (N*m -> g*cm, 与下位机接收逻辑一致)
 %                 .ramp_step     PWM 平滑每周期最大变化量, 默认 50
 %                 .enable_ramp   是否启用斜坡平滑, 默认由 pwm_prev_us 是否传入决定
 %     pwm_prev_us 可选, 5x1 上一周期 PWM 占空比(us)。传入后默认启用 50 步平滑。
@@ -50,16 +48,15 @@ if ~isempty(pwm_prev_us)
     end
 end
 
-% 力矩帧接收后乘以 100, 再进入推力分配矩阵。
 alloc_cmd = tau_cmd;
-alloc_cmd(4:6) = alloc_cmd(4:6) * params.moment_scale;
 
 % 文档中的 5x6 推力分配矩阵, 输出单位为 g。
+% 力矩列已放大 100 倍，不再对输入力矩先乘 100。
 K = [
-    0,   0,  -0.5, 0,  0.0083,  0;
-    0,   0,  -0.5, 0, -0.0083,  0;
-    0,  -0.5, 0,   0,  0,      -0.0083;
-    0,  -0.5, 0,   0,  0,       0.0083;
+    0,   0,  -0.5, 0,  0.83,  0;
+    0,   0,  -0.5, 0, -0.83,  0;
+    0,  -0.5, 0,   0,  0,    -0.83;
+    0,  -0.5, 0,   0,  0,     0.83;
     1.0, 0,   0,   0,  0,       0
     ];
 
@@ -97,7 +94,6 @@ end
 function params = fill_default_params(params, has_prev_pwm)
 %FILL_DEFAULT_PARAMS 补齐推力分配和 PWM 标定默认参数。
 
-if ~isfield(params, 'moment_scale'), params.moment_scale = 100; end
 if ~isfield(params, 'thrust_limit_pos_g'), params.thrust_limit_pos_g = 9500 * ones(5,1); end
 if ~isfield(params, 'thrust_limit_neg_g'), params.thrust_limit_neg_g = 7300 * ones(5,1); end
 if ~isfield(params, 'pwm_center_us'), params.pwm_center_us = 1500; end

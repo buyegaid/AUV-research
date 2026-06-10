@@ -2,13 +2,13 @@ function [xdot,U,M,C,D,g,tau]=xhy(x,ui,Vc,betaVc,w_c,opt)
 % XHY 5-thruster AUV dynamics
 %   x   = [u v w p q r x y z phi theta psi]'  (12 states)
 %   ui  = 控制输入，含义取决于 opt.mode:
-%         'rpm' (默认): [n_main n_vert1 n_vert2 n_side1 n_side2]' (RPM)
-%         'pwm':        [T5 T1 T2 T3 T4]' (PWM us, dyn order)
+%         'rpm' (默认): [T1 T2 T3 T4 T5]' (RPM)
+%         'pwm':        [T1 T2 T3 T4 T5]' (PWM us)
 %   Vc, betaVc, w_c are optional ocean current inputs
 %   opt - 可选参数结构体:
 %         .mode:            'rpm' (默认, 向后兼容) | 'pwm' (数字孪生)
 %         .thruster_params: 1×5 cell, PWM模式下各推进器的标定参数
-%                           顺序: {M080_T5, M060_T1, M060_T2, M060_T3, M060_T4}
+%                           顺序: {M060_T1, M060_T2, M060_T3, M060_T4, M080_T5}
 %         .voltage_v:       标量或 1×5 向量, 供电电压 (默认 24V)
 %   Outputs are the state derivative xdot, speed U, and model matrices/forces.
 
@@ -107,7 +107,7 @@ g = gRvect(W, B, R, r_bG, r_bB);
 [B_thr, ~] = xhy_thruster_geometry();
 
 if pwm_mode
-    % 数字孪生模式: ui = PWM us, dyn order [T5 T1 T2 T3 T4]
+    % 数字孪生模式: ui = PWM us, 顺序 [T1 T2 T3 T4 T5]
     voltage_v = opt.voltage_v;
     if isscalar(voltage_v)
         voltage_v = voltage_v * ones(5,1);
@@ -118,38 +118,38 @@ if pwm_mode
         thr_p = opt.thruster_params;  % 1×5 cell
     else
         % 默认使用未标定的厂商参数
-        thr_p = {m080_thruster_params(), m060_thruster_params(), ...
+        thr_p = {m060_thruster_params(), m060_thruster_params(), ...
                  m060_thruster_params(), m060_thruster_params(), ...
-                 m060_thruster_params()};
+                 m080_thruster_params()};
     end
 
     % 逐推进器调用 M080/M060 模型
-    T_main  = m080_thruster_model(ui(1), voltage_v(1), thr_p{1});
-    T_vert1 = m060_thruster_model(ui(2), voltage_v(2), thr_p{2});
-    T_vert2 = m060_thruster_model(ui(3), voltage_v(3), thr_p{3});
-    T_side1 = m060_thruster_model(ui(4), voltage_v(4), thr_p{4});
-    T_side2 = m060_thruster_model(ui(5), voltage_v(5), thr_p{5});
+    T_vert1 = m060_thruster_model(ui(1), voltage_v(1), thr_p{1});
+    T_vert2 = m060_thruster_model(ui(2), voltage_v(2), thr_p{2});
+    T_side1 = m060_thruster_model(ui(3), voltage_v(3), thr_p{3});
+    T_side2 = m060_thruster_model(ui(4), voltage_v(4), thr_p{4});
+    T_main  = m080_thruster_model(ui(5), voltage_v(5), thr_p{5});
 
     T_vec = [
-        T_main.thrust_n;
         T_vert1.thrust_n;
         T_vert2.thrust_n;
         T_side1.thrust_n;
-        T_side2.thrust_n
+        T_side2.thrust_n;
+        T_main.thrust_n
         ];
 else
-    % 传统 RPM 模式（向后兼容）: ui = RPM
+    % 传统 RPM 模式: ui = RPM, 顺序 [T1 T2 T3 T4 T5]
     n_max = 2500;            % 额定最大转速 (RPM)
     n_rpm = sat(ui, n_max);  % 限幅
 
     % 推力计算：主推直径10cm，辅助推直径6cm
-    T_main  = thrust_main(n_rpm(1), rho);
-    T_vert1 = thrust_aux(n_rpm(2), rho);
-    T_vert2 = thrust_aux(n_rpm(3), rho);
-    T_side1 = thrust_aux(n_rpm(4), rho);
-    T_side2 = thrust_aux(n_rpm(5), rho);
+    T_vert1 = thrust_aux(n_rpm(1), rho);
+    T_vert2 = thrust_aux(n_rpm(2), rho);
+    T_side1 = thrust_aux(n_rpm(3), rho);
+    T_side2 = thrust_aux(n_rpm(4), rho);
+    T_main  = thrust_main(n_rpm(5), rho);
 
-    T_vec = [T_main; T_vert1; T_vert2; T_side1; T_side2];
+    T_vec = [T_vert1; T_vert2; T_side1; T_side2; T_main];
 end
 
 tau = B_thr * T_vec;
