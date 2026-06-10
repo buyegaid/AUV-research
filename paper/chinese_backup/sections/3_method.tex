@@ -1,11 +1,11 @@
-\section{EG-UCCO观测器设计}
+\section{CFD-PCO观测器设计}
 
-EG-UCCO的核心思想是利用CFD预标定的动力学模型进行一步前向速度预测，将预测值与DVL实测速度的残差通过灵敏度分析映射为海流估计的梯度方向，并在激励条件满足时进行更新。图\ref{fig:architecture}给出了EG-UCCO的整体架构。
+CFD-PCO的核心思想是利用CFD预标定的动力学模型进行一步前向速度预测，将预测值与DVL实测速度的残差通过灵敏度分析映射为海流估计的梯度方向，并在激励条件满足时进行更新。图\ref{fig:architecture}给出了CFD-PCO的整体架构。
 
 \begin{figure}[t]
 \centering
 \fbox{\parbox{0.9\textwidth}{
-\textbf{EG-UCCO架构:}
+\textbf{CFD-PCO架构:}
 
 $\bm{\tau}$(推力) $\rightarrow$ [名义模型 $\hat{\bm{\nu}}_{nom}$, CFD, $V_c$=0] $\rightarrow$ 模型残差 $\rightarrow$ [观测器模型 $\hat{\bm{\nu}}_{obs}$, CFD, $\hat{\bm{c}}$] $\leftarrow$ $\bm{\nu}_{meas}$(DVL)
 
@@ -15,7 +15,7 @@ YES $\rightarrow$ [梯度更新 $\Delta\hat{\bm{c}} = \gamma\bm{\Phi}_c^T\bm{e}$
 
 NO $\rightarrow$ [GM时间传播 $\hat{\bm{c}} \leftarrow \alpha\hat{\bm{c}}+(1-\alpha)\bar{\bm{c}}$]
 }}
-\caption{EG-UCCO整体架构}
+\caption{CFD-PCO整体架构}
 \label{fig:architecture}
 \end{figure}
 
@@ -114,4 +114,4 @@ $\bm{W}_c$本质上近似了海流参数估计的Fisher信息矩阵。其最小�
     \label{eq:feedforward}
 \end{equation}
 
-\textbf{补偿消融实验的发现}：在将$\hat{\bm{d}}$的各分量分别注入SMC控制律的测试中，我们发现了一个重要的耦合现象——Surge方向的前馈补偿(\texttt{hat\_d(1)})会严重损害航向控制，导致航向RMSE从0.14 rad恶化至0.93 rad（仅Surge补偿时）。根因在于XHY AUV的推进器配置中，主推转速变化通过推力分配间接影响偏航力矩，形成了Surge-Yaw通道的动力学耦合。基于此发现，EG-UCCO采用\textbf{仅Yaw前馈}策略：仅将$\hat{\bm{d}}(6)$（偏航力矩补偿）注入控制律，Surge通道由速度PID独立处理。这一设计选择是工程实践导向的，避免了通道间耦合，且经实验验证为最优配置。
+\textbf{补偿消融实验的发现}：在将$\hat{\bm{d}}$的各分量分别注入SMC控制律的测试中，我们发现了一个重要的耦合现象——Surge方向的前馈补偿(\texttt{hat\_d(1)})会严重损害航向控制，导致航向RMSE从0.14 rad恶化至0.93 rad（仅Surge补偿时）。根因在于XHY AUV的推进器配置中，主推转速变化通过推力分配间接影响偏航力矩，形成了Surge-Yaw通道的动力学耦合。基于此发现，CFD-PCO采用\textbf{仅Yaw前馈}策略：仅将$\hat{\bm{d}}(6)$（偏航力矩补偿）注入控制律，Surge通道由速度PID独立处理。这一设计选择是工程实践导向的，避免了通道间耦合，且经实验验证为最优配置。

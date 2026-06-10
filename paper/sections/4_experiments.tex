@@ -20,7 +20,7 @@ All scenarios use a first-order Gauss-Markov current process (correlation time $
     \item \textbf{KIN}: Kinematic current observer \cite{liang2018three}---dynamics-model-free, inherently robust but slow convergence
     \item \textbf{B{\o}rhaug}: Model-based nonlinear Luenberger observer \cite{borhaug2007model} with augmented state $[\bm{\nu};\,\bm{c}]$, assuming perfect model knowledge
     \item \textbf{EKF}: CFD-augmented extended Kalman filter (8 states: $\bm{\nu}+\bm{c}$), without force bias augmentation
-    \item \textbf{UCCO}: Proposed EG-UCCO (yaw-only feedforward)
+    \item \textbf{UCCO}: Proposed CFD-PCO (yaw-only feedforward)
 \end{itemize}
 
 \textbf{Evaluation metric}: Root-mean-square error of current estimate, $\text{RMSE}_{V_c}=\sqrt{\frac{1}{N}\sum_{i=1}^{N}\|\hat{\bm{c}}_i-\bm{c}_i^{\text{true}}\|^2}$ (m/s).
@@ -35,7 +35,7 @@ Table~\ref{tab:accuracy} presents RMSE$_{V_c}$ for all methods across 3 scenario
 \label{tab:accuracy}
 \begin{tabular}{llcccc}
 \toprule
-Scenario & Mismatch & KIN & B{\o}rhaug & EKF & UCCO \\
+Scenario & Mismatch & KIN & B{\o}rhaug & EKF & CFD-PCO \\
 \midrule
 \multirow{4}{*}{Circ.} & 0\%   & 0.192 & 0.430 & \textbf{0.035} & 0.064 \\
                         & 10\%  & 0.192 & 0.438 & 0.031 & 0.066 \\
@@ -126,7 +126,7 @@ Under low sensor noise conditions (DVL velocity noise $\sigma_v=0.02$\,m/s, head
 \label{tab:montecarlo}
 \begin{tabular}{llcccc}
 \toprule
-Scenario & Mismatch & KIN & B{\o}rhaug & EKF & UCCO \\
+Scenario & Mismatch & KIN & B{\o}rhaug & EKF & CFD-PCO \\
 \midrule
 \multirow{2}{*}{Circ.} & 0\%   & 0.192$\pm$0.000 & 0.449$\pm$0.200 & \textbf{0.034$\pm$0.000} & 0.163$\pm$0.012 \\
                        & 20\%  & 0.192$\pm$0.001 & 0.449$\pm$0.205 & 0.048$\pm$0.023 & 0.167$\pm$0.026 \\

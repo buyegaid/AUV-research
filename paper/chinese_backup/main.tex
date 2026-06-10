@@ -1,4 +1,4 @@
-% Excitation-Gated CFD-Prior Current Observer for AUVs:
+% A CFD-Prior Prediction-Correction Observer for AUV Ocean Current Estimation under Hydrodynamic Model Mismatch for AUVs:
 % Robust Estimation under Hydrodynamic Model Mismatch
 % Ocean Engineering submission format
 \documentclass[12pt,a4paper]{article}
@@ -29,7 +29,7 @@
 \newcommand{\norm}[1]{\lVert#1\rVert}
 \newcommand{\pd}[2]{\frac{\partial #1}{\partial #2}}
 
-\title{\textbf{Excitation-Gated CFD-Prior Current Observer for AUVs:\\Robust Estimation under Hydrodynamic Model Mismatch}}
+\title{\textbf{A CFD-Prior Prediction-Correction Observer for AUV Ocean Current Estimation under Hydrodynamic Model Mismatch for AUVs:\\Robust Estimation under Hydrodynamic Model Mismatch}}
 
 \author{Author Name\textsuperscript{1,*}}
 
@@ -40,7 +40,7 @@
 \maketitle
 
 \begin{abstract}
-Accurate ocean current estimation is essential for feedforward compensation in autonomous underwater vehicle (AUV) trajectory tracking control. Existing current estimation methods face a fundamental trade-off: kinematic observers converge slowly but are inherently robust to model errors, while extended state observers (ESO) respond quickly but estimate a lumped disturbance that conflates physical currents with model uncertainty. This paper proposes an Excitation-Gated CFD-Prior Current Observer (EG-UCCO) that leverages a computational fluid dynamics (CFD) pre-calibrated hydrodynamic model as a deterministic prior, combined with a sensitivity Gramian-driven excitation gate for robust current estimation under model mismatch. Systematic validation is conducted on the XHY AUV simulation platform across 3 current scenarios, 4 model mismatch levels, and 5 baseline methods. Experimental results demonstrate that: (1) EG-UCCO achieves the best estimation accuracy in all 12 scenario-mismatch combinations, averaging 42\% improvement over the kinematic baseline; (2) under 30\% CFD drag coefficient perturbation, EG-UCCO degrades only 4\% while the tuned extended Kalman filter (EKF) degrades 16\%; (3) the excitation gate improves estimation accuracy by 23\% under high sensor noise compared to the no-gate variant. The proposed method provides a robust solution for AUV current estimation under hydrodynamic model mismatch.
+Accurate ocean current estimation is essential for feedforward compensation in autonomous underwater vehicle (AUV) trajectory tracking control. Existing current estimation methods face a fundamental trade-off: kinematic observers converge slowly but are inherently robust to model errors, while extended state observers (ESO) respond quickly but estimate a lumped disturbance that conflates physical currents with model uncertainty. This paper proposes an A CFD-Prior Prediction-Correction Observer for AUV Ocean Current Estimation under Hydrodynamic Model Mismatch (CFD-PCO) that leverages a computational fluid dynamics (CFD) pre-calibrated hydrodynamic model as a deterministic prior, combined with a sensitivity Gramian-driven excitation gate for robust current estimation under model mismatch. Systematic validation is conducted on the XHY AUV simulation platform across 3 current scenarios, 4 model mismatch levels, and 5 baseline methods. Experimental results demonstrate that: (1) CFD-PCO achieves the best estimation accuracy in all 12 scenario-mismatch combinations, averaging 42\% improvement over the kinematic baseline; (2) under 30\% CFD drag coefficient perturbation, CFD-PCO degrades only 4\% while the tuned extended Kalman filter (EKF) degrades 16\%; (3) the excitation gate improves estimation accuracy by 23\% under high sensor noise compared to the no-gate variant. The proposed method provides a robust solution for AUV current estimation under hydrodynamic model mismatch.
 
 \textbf{Keywords:} autonomous underwater vehicle; ocean current observer; CFD prior; excitation gating; model mismatch robustness
 \end{abstract}

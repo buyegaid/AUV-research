@@ -20,7 +20,7 @@
     \item \textbf{KIN}：运动学海流观测器\cite{liang2018three}，不依赖动力学模型，天然免疫模型失配，但收敛较慢
     \item \textbf{CFD-Luenberger}：无门控CFD-Luenberger观测器（受B{\o}rhaug 2007~\cite{borhaug2007model}启发），使用CFD动力学进行速度预测和海流积分更新，但无灵敏度分析和激励门控
     \item \textbf{EKF}：CFD增广扩展卡尔曼滤波（8状态：$\bm{\nu}+\bm{c}$），无额外力偏置状态
-    \item \textbf{UCCO}：本文提出的EG-UCCO（仅Yaw前馈）
+    \item \textbf{UCCO}：本文提出的CFD-PCO（仅Yaw前馈）
 \end{itemize}
 
 \textbf{评估指标}：海流估计的均方根误差RMSE$_{V_c}=\sqrt{\frac{1}{N}\sum_{i=1}^{N}\|\hat{\bm{c}}_i-\bm{c}_i^{\text{true}}\|^2}$（m/s），平均绝对误差MAE$_{V_c}$。
@@ -35,7 +35,7 @@
 \label{tab:accuracy}
 \begin{tabular}{llcccc}
 \toprule
-场景 & 失配 & KIN & B{\o}rhaug & EKF & UCCO \\
+场景 & 失配 & KIN & B{\o}rhaug & EKF & CFD-PCO \\
 \midrule
 \multirow{4}{*}{圆形} & 0\%   & 0.192 & 0.430 & \textbf{0.035} & 0.064 \\
                       & 10\%  & 0.192 & 0.438 & 0.031 & 0.066 \\
@@ -130,7 +130,7 @@ Gramian门控 ($\mu=10^{-8}$) & 0.160 & 0.167 & 0.216 \\
 \label{tab:montecarlo}
 \begin{tabular}{llcccc}
 \toprule
-场景 & 失配 & KIN & B{\o}rhaug & EKF & UCCO \\
+场景 & 失配 & KIN & B{\o}rhaug & EKF & CFD-PCO \\
 \midrule
 \multirow{2}{*}{圆形} & 0\%   & 0.192$\pm$0.000 & 0.449$\pm$0.200 & \textbf{0.034$\pm$0.000} & 0.163$\pm$0.012 \\
                       & 20\%  & 0.192$\pm$0.001 & 0.449$\pm$0.205 & 0.048$\pm$0.023 & 0.167$\pm$0.026 \\
