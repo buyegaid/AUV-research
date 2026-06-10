@@ -35,6 +35,8 @@ end
 if ~isfield(opt, 'mode'), opt.mode = 'rpm'; end
 if ~isfield(opt, 'thruster_params'), opt.thruster_params = {}; end
 if ~isfield(opt, 'voltage_v'), opt.voltage_v = 24.0; end
+if ~isfield(opt, 'mismatch_pct'), opt.mismatch_pct = 0; end
+if ~isfield(opt, 'mismatch_seed'), opt.mismatch_seed = 1; end
 
 pwm_mode = strcmp(opt.mode, 'pwm');
 
@@ -96,7 +98,7 @@ W = m * g_mu;
 B = W; % 浮力等于重力
 
 % 计算阻力（基于CFD仿真数据）
-[tau_drag, D] = xhy_drag_cfd(nu_r);
+[tau_drag, D] = xhy_drag_cfd(nu_r, opt.mismatch_pct, opt.mismatch_seed);
 
 % 运动学和重力/浮力矩阵
 [J,R] = eulerang(x(10), x(11), x(12));

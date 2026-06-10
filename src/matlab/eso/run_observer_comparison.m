@@ -129,6 +129,11 @@ end
 z_d = 10;
 x_state = [u0; 0; 0; 0; 0; 0; xn0; yn0; zn0; 0; 0; psi0];
 
+%% ===== 模型失配配置 =====
+opt_xhy = struct('mode', 'rpm');
+opt_xhy.mismatch_pct = cfg.mismatch_pct;
+opt_xhy.mismatch_seed = cfg.seed;  % 失配随机模式固定为seed
+
 %% ===== M矩阵（常数） =====
 M_const = compute_M_constant();
 
@@ -137,7 +142,7 @@ M_const = compute_M_constant();
 kin.Vc_hat = 0; kin.beta_hat = deg2rad(0); kin.x_hat = [xn0; yn0; zn0];
 
 % Børhaug
-borhaug.c_hat = [0; 0]; borhaug.nu_hat = x_state(1:6);
+borhaug.c_hat = [0; 0];
 
 % EKF
 ekf.x_hat = []; ekf.P = [];
@@ -179,7 +184,7 @@ for i = 1:N
     % 模型失配：扰动 CFD 阻力系数（plant使用扰动后的阻力）
     % 通过修改 xhy.m 中的 CFD 参数或直接在外部做
     % 这里通过对真实的 tau_drag 加扰动来模拟
-    [~, ~, M, C, D, g_vec, tau_thr] = xhy(x_state, ui, Vc, betaVc, wc);
+    [~, ~, M, C, D, g_vec, tau_thr] = xhy(x_state, ui, Vc, betaVc, wc, opt_xhy);
 
     % 添加传感器噪声
     nu_meas = nu;
@@ -212,10 +217,10 @@ for i = 1:N
         kin.c_hist(i, :) = [kin.Vc_hat*cos(kin.beta_hat); kin.Vc_hat*sin(kin.beta_hat)]';
     end
 
-    % 2) Børhaug 2007 观测器
+    % 2) Børhaug 2007 观测器（速度预测型，模型基PI）
     if obs_use(2)
-        [borhaug.c_hat, borhaug.nu_hat, borhaug_aux] = ...
-            borhaug_current_observer(borhaug.c_hat, borhaug.nu_hat, ...
+        [borhaug.c_hat, borhaug_aux] = ...
+            borhaug_current_observer(borhaug.c_hat, ...
                 nu_meas, tau_thr, psi, M_const, params.borhaug, dt);
         borhaug.c_hist(i, :) = borhaug.c_hat';
     end
@@ -235,7 +240,7 @@ for i = 1:N
     end
 
     % 状态更新
-    x_state = rk4(@xhy, dt, x_state, ui, Vc, betaVc, wc);
+    x_state = rk4(@xhy, dt, x_state, ui, Vc, betaVc, wc, opt_xhy);
     x_state(12) = ssa(x_state(12));
 
     if cfg.verbose, timebar; end
