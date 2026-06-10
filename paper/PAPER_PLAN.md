@@ -143,12 +143,47 @@
 
 | 论文 | 引用位置 | 用途 |
 |------|---------|------|
-| Børhaug et al. (2007) | 引言 | 动力学海流观测器先驱 |
-| Kim et al. (2018) | 引言+讨论 | HGO+在线辨识基线 |
+| **动力学海流观测器（模型基）** | | |
+| Børhaug et al. (2007) | 引言 | 动力学海流观测器先驱（假设完美模型） |
+| Kim et al. (2018) | 引言+讨论 | HGO+在线RLS辨识基线 |
+| Long et al. (2021) | 引言+实验 | ESKF基MPC，EKF基线方法论基础 |
+| **运动学海流观测器** | | |
 | Liang et al. (2018) | 引言+方法 | 运动学海流观测器基线 |
 | He et al. (2024) | 引言 | 运动学+NDO双层架构 |
+| Zeng et al. (2017) | 引言 | ALOS+运动学观测器，κ指数收敛 |
+| Dong et al. (2016) | 引言 | 积分backstepping+海流补偿 |
+| **ESO变体** | | |
+| Xie et al. (2020) | 引言+方法 | ESO基线（集总扰动） |
+| Kang et al. (2020) | 引言 | 模糊自适应ESO |
+| Lamraoui & Zhu (2019) | 引言 | GESO/HESO快变扰动ESO |
+| Guerrero et al. (2020) | 方法 | GSTA-ESO + NLPD |
+| Xu et al. (2024) | 引言 | 规定时间ESO |
+| Wang et al. (2024) | 引言 | 固定时间RSDASO |
+| He et al. (2025) | 引言 | 超螺旋ESO+FOPID |
+| Zhang et al. (2024) | 引言 | 变增益ESO（peaking抑制） |
+| Ji et al. (2023) | 引言 | 自适应LADRC在线调谐 |
+| Dai et al. (2022) | 引言+实验 | 降阶ESO+湖试验证 |
+| **EKF/UKF** | | |
+| Kim (2020) | 引言+实验 | 协同UKF海流估计 |
+| **Set-Membership估计** | | |
+| Jaulin (2009) | 方法 | Bounded-error估计理论基础（死区机制） |
+| Caiti et al. (2002) | 方法 | Set-membership声学跟踪（UBB vs EKF对比） |
+| **ALOS制导** | | |
+| Fossen, Pettersen, Galeazzi (2015) | 引言 | ALOS自适应侧滑补偿 |
+| Fossen, Lekkas (2015) | 引言 | 直接/间接自适应ILOS |
+| **SMC控制** | | |
+| Vu et al. (2021) | 实验 | 动态SMC+最优推力分配 |
+| Nerkar et al. (2022) | 引言 | STA-SMC扰动观测器 |
+| **CFD水动力** | | |
+| Hong et al. (2022) | 问题描述 | CFD系数估计数值方法 |
+| Lin & Li (2022) | 问题描述 | 动网格CFD vs PMM实验验证 |
+| **持久激励与可辨识性** | | |
+| Reis (2016) | 方法 | PE条件与可辨识性等价分析（Fisher信息理论基础） |
+| **综述与基础** | | |
 | Fossen (2011) | 问题描述 | 海洋器动力学手册 |
-| Aguiar & Pascoal (2007) | 引言 | 指数海流观测器 |
+| Shehu et al. (2022) | 引言 | AUV跟踪控制综述 |
+| **数据驱动对比** | | |
+| Zhao et al. (2024) | 讨论 | PINN+MPC（数据驱动 vs CFD物理先验） |
 
 ---
 
