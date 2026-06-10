@@ -57,38 +57,40 @@ NO $\rightarrow$ [GM时间传播 $\hat{\bm{c}} \leftarrow \alpha\hat{\bm{c}}+(1-
 
 $\bm{W}_c$本质上近似了海流参数估计的Fisher信息矩阵。其最小特征值$\lambda_{\min}(\bm{W}_c)$定量刻画了当前动力学状态下海流参数的可辨识程度。
 
-\subsection{激励门控机制}
+\subsection{灵敏度分析与自适应正则化}
 
 \textbf{可辨识性分析}：当AUV处于稳态直航时($r\approx 0$，$\dot{\bm{\nu}}\approx 0$)，海流效应主要通过阻力差异进入动力学。此时灵敏度矩阵接近奇异，$\lambda_{\min}(\bm{W}_c) \approx 0$，$\bm{c}$不可唯一辨识。而当AUV处于机动状态时（转弯$|r|>0$或加减速$|\dot{u}|>0$），Coriolis耦合项和惯性项提供了额外的辨识信息，$\lambda_{\min}(\bm{W}_c)$增大到可辨识水平。
 
-基于上述分析，设计激励门控条件：
+基于可辨识性分析，将Gramian条件数引入自适应正则化：
 
 \begin{equation}
-    \text{更新条件}: \quad \lambda_{\min}(\bm{W}_c) > \mu_{\text{gate}}
+    \gamma_{\text{eff}} = \frac{\gamma_0}{1 + \lambda_{\min}(\bm{W}_c) \cdot \kappa}
     \label{eq:gate}
 \end{equation}
 
-其中$\mu_{\text{gate}}=10^{-8}$为门控阈值。设置较低的门控阈值确保正常机动时不会误阻断更新，同时在高噪声、弱激励时为估计提供保护。门控机制将"稳态不可辨识"这一理论缺陷转化为实用特性：在需要时才更新，不需要时自动维持。
+其中$\gamma_0$为基础增益（对应$K_{\text{obs}}\times 100$），$\kappa$为正则化缩放系数。当$\lambda_{\min}(\bm{W}_c)$很小时（弱可辨识），分母接近1，使用全增益；当$\lambda_{\min}$增大时（强可辨识），增益自适应降低，避免单步过冲。这样既保留了可辨识性信息的使用，又避免了硬门控的"全或无"决策带来的性能损失。
 
-\textbf{GM时间传播}：当激励不足时，海流估计按一阶Gauss-Markov过程进行时间传播：
+需要指出的是，在本文的实验条件下（含DVL测量噪声$\sigma_v=0.02$ m/s），$\lambda_{\min}(\bm{W}_c)$始终高于门控阈值$10^{-8}$，GB/T门控从未实际触发。UCCO的实际防发散能力来自三个保护机制的联合作用：(1) \textbf{预测-校正架构}——速度层面的预测误差天然很小（$O(10^{-4})$ m/s），限制了海流更新的信号幅度；(2) \textbf{GM时间衰减}——$\tau_c=100$s的慢衰减将估计拉向先验均值，防止漂移；(3) \textbf{单步限幅}——$\Delta c_{\max}=0.1$ m/s限制极端更新的影响。这三个机制共同保证了即使在没有任何门控的情况下，UCCO也不会像CFD-Luenberger观测器那样在直线轨迹上发散（后者缺乏限幅和GM衰减）。
+
+\textbf{GM时间传播}：海流估计在每个时间步均受一阶Gauss-Markov衰减：
 
 \begin{equation}
-    \hat{\bm{c}}_{k+1} = e^{-\Delta t/\tau_c}\hat{\bm{c}}_k + (1-e^{-\Delta t/\tau_c})\bar{\bm{c}}
+    \hat{\bm{c}}_{k+1} \leftarrow e^{-\Delta t/\tau_c}\hat{\bm{c}}_k + (1-e^{-\Delta t/\tau_c})\bar{\bm{c}}
     \label{eq:gm}
 \end{equation}
 
-其中$\tau_c=100$s为海流相关时间常数，$\bar{\bm{c}}$为海流均值（通常取零或先验值）。GM传播确保在DVL短暂失效或长时直航段期间，海流估计不会发散。
+其中$\tau_c=100$s为海流相关时间常数，$\bar{\bm{c}}$为海流均值（通常取零或先验值）。GM衰减与梯度更新并行执行，持续提供稳定性。
 
 \subsection{梯度更新律}
 
-当激励条件满足时，采用梯度下降更新海流估计：
+海流估计采用梯度下降更新：
 
 \begin{equation}
     \hat{\bm{c}}_{k+1} = \hat{\bm{c}}_k + \gamma \cdot \frac{\bm{\Phi}_c^T \bm{e}_{\nu}}{1 + \lambda_{\min}(\bm{W}_c) \cdot \kappa}
     \label{eq:update}
 \end{equation}
 
-其中$\bm{e}_{\nu} = \bm{\nu}_{k+1}^{\text{meas}} - \hat{\bm{\nu}}_{k+1|k}$为速度预测新息（仅取surge和sway分量），$\gamma$为有效增益，$\kappa$为自适应正则化系数。更新量被限制在单步最大变化量$\Delta c_{\max}=0.01$ m/s以内，防止单步过冲。
+其中$\bm{e}_{\nu} = \bm{\nu}_{k+1}^{\text{meas}} - \hat{\bm{\nu}}_{k+1|k}$为速度预测新息（仅取surge和sway分量），$\gamma$为有效增益，$\kappa$为自适应正则化系数。更新量被限制在单步最大变化量$\Delta c_{\max}=0.1$ m/s以内，防止单步过冲。
 
 选择梯度方向$\bm{\Phi}_c^T\bm{e}_{\nu}$而非牛顿方向$(\bm{\Phi}_c^T\bm{\Phi}_c)^{-1}\bm{\Phi}_c^T\bm{e}_{\nu}$的理由是：(1) 避免Gramian接近奇异时的数值不稳定；(2) 梯度方向在模型失配下更加鲁棒，不会因模型误差产生过大的参数跳变。
 
