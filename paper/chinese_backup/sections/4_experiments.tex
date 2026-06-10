@@ -142,3 +142,45 @@ Gramian门控 ($\mu=10^{-8}$) & 0.160 & 0.167 & 0.216 \\
 \end{table}
 
 在传感器噪声下，EKF保持最优精度（圆形0.034、直线0.039）和最低方差（$<0.001$），体现了Kalman滤波对传感器噪声的自然处理能力。KIN几乎不受噪声影响（方差$<0.001$），因为其速度残差平均机制滤除了高频噪声。UCCO在圆形轨迹上表现良好（0.163$\pm$0.012），但在直线轨迹上方差急剧增大（0.284$\pm$0.339至0.587$\pm$0.531）——门控阻断更新后，估计依赖于GM时间传播，初始瞬态的随机性导致较大的逐次波动。B{\o}rhaug在噪声下虽未完全崩塌（直线1.54 vs 无噪声2.28），但精度仍然很差且方差大（$\pm$0.32--0.43）。
+
+\subsection{跨平台验证（REMUS 100）}
+
+为验证PC-RCO的跨平台泛化能力，将观测器移植到REMUS 100平台\cite{fossen2011handbook}——一个广泛使用的标准AUV模型，其动力学特性与XHY有显著差异（质量31.9 vs 85.8 kg，舵面控制 vs 5推进器推力分配，线性+升力阻尼 vs CFD多项式阻力）。需要说明的是，此验证使用REMUS的标称动力学模型（无模型失配），旨在检验方法在完全不同动力学结构下的可移植性。
+
+\begin{table}[h]
+\centering
+\caption{跨平台验证 (REMUS 100, 圆形轨迹, 无失配, RMSE$_{V_c}$ m/s)}
+\label{tab:remus}
+\begin{tabular}{lccc}
+\toprule
+平台 & KIN & CFD-Luenberger & PC-RCO \
+\midrule
+XHY   & 0.192 & 0.430 & 0.064 \
+REMUS & 0.260 & 0.369 & 0.115 \
+\bottomrule
+\end{tabular}
+\end{table}
+
+跨平台验证结果（表\ref{tab:remus}）表明：
+\begin{enumerate}
+    \item 三观测器的相对排名在XHY和REMUS平台上完全一致：PC-RCO $>$ KIN $>$ CFD-Luenberger，验证了方法的跨平台有效性。
+    \item PC-RCO在REMUS上的绝对精度低于XHY（0.115 vs 0.064），主要原因是REMUS的线性+升力阻尼在速度预测中的非线性弱于XHY的CFD多项式阻力，导致灵敏度矩阵$\bm{\Phi}_c$的信息量降低。
+    \item CFD-Luenberger在REMUS上未出现XHY那样的严重崩塌（0.369 vs 0.430），原因可能是REMUS的线性阻尼提供了天然的数值稳定性。
+\end{enumerate}
+
+\subsection{海试验证计划}
+
+本文的仿真验证为方法提供了原理性证据，但最终需要在实际海洋环境中检验。为此，规划了以下海试验证方案：
+
+\textbf{试验平台}：XHY AUV（5推进器配置），搭载DVL（Nortek 1MHz）、INS（Xsens MTi-300）、深度计和GPS。独立ADCP（Teledyne 600kHz）作为海流真值参考。
+
+\textbf{试验场景}：
+\begin{enumerate}
+    \item \textbf{圆形轨迹}（持续机动，半径50--100 m）：验证持续激励下的海流估计精度。
+    \item \textbf{直线巡航}（低激励，航程200--500 m）：验证弱机动条件下的鲁棒性，测试GM传播维持估计的能力。
+    \item \textbf{海流变化响应}（穿越不同流场区域）：利用自然海流的空间变化测试观测器的响应速度。
+\end{enumerate}
+
+\textbf{数据采集与处理}：ADCP记录垂向海流剖面，取AUV航行深度（5--20 m）的平均值作为真值。DVL底跟踪速度作为对地速度测量。试验后离线运行观测器，将估计值与ADCP真值对比，计算RMSE$_{V_c}$和收敛时间。
+
+\textbf{预期结果}：基于仿真结论，预期PC-RCO在海试中的相对表现应与仿真一致——在机动场景下精度接近EKF级，在弱机动场景下保持稳定不崩塌。实际海洋中的湍流、传感器噪声和DVL底跟踪失效将对观测器构成额外挑战，需要相应调整$\tau_c$和$\Delta c_{\max}$参数。
