@@ -8,6 +8,10 @@ This file provides guidance to Codex (Codex.ai/code) when working with code in t
 
 **所有MATLAB程序都从项目根目录运行：** `C:\Users\sixuh\Documents\B_matlab_ws\AUV\research`
 
+**Obsidian 参考仓库：** `C:\Users\sixuh\Documents\A_temp\test_obs\test`
+
+涉及“小黄鱼推进器模型”“小黄鱼运动模型”等实艇参考资料时，优先从该 Obsidian 仓库查找依据。
+
 确保路径已添加：
 
 ```matlab

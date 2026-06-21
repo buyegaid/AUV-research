@@ -39,10 +39,10 @@ if nargin < 2
     params.rho = 1026;
     params.D_prop_main = 0.10;
     params.D_prop_aux  = 0.06;
-    params.KT_main_fwd = 0.0293;   % CFD阻力校准 (2026-06-03)
-    params.KT_main_rev = 0.0201;   % 同比缩放
-    params.KT_aux_fwd  = 0.327;    % CFD阻力校准 (2026-06-03)
-    params.KT_aux_rev  = 0.327;    % 无反向数据, 暂取与正向相同
+    params.KT_main_fwd = 0.0567;   % 0616非饱和校准, 80%RPM_ref=2105 (2026-06-21)
+    params.KT_main_rev = 0.0235;   % 0616非饱和校准, 80%RPM_ref=2105
+    params.KT_aux_fwd  = 1.2531;    % 0616非饱和校准, 80%RPM_ref=1053 (2026-06-21)
+    params.KT_aux_rev  = 0.6193;    % 0616非饱和校准, 80%RPM_ref=1053
     params.n_max = 2500;
     params.x_vert_f = +0.344;
     params.x_vert_r = -0.293;
