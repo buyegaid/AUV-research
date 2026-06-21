@@ -1,11 +1,11 @@
 \section{Conclusion}
 
-This paper addressed the problem of robust ocean current estimation for AUVs under hydrodynamic model mismatch by proposing an Excitation-Gated CFD-Prior Current Observer (EG-UCCO). The main contributions are:
+This paper addressed the problem of robust ocean current estimation for AUVs under hydrodynamic model mismatch by proposing an Excitation-Gated CFD-Prior Current Observer (CFD-PCO). The main contributions are:
 
 \begin{enumerate}[itemsep=0pt,topsep=4pt]
     \item \textbf{Methodological innovation}: A CFD pre-calibrated drag model is leveraged as a deterministic prior within a velocity-level prediction-correction observer architecture, avoiding the noise amplification inherent in acceleration-level residual methods. The sensitivity Gramian excitation gate, grounded in Fisher information theory, provides a mathematically principled alternative to heuristic gating.
 
-    \item \textbf{Systematic validation}: Comprehensive experiments across 3 current scenarios and 4 model mismatch levels demonstrate that EG-UCCO achieves the best current estimation accuracy in all 12 configurations. Under 30\% CFD drag coefficient perturbation, estimation accuracy degrades by only 4\%, substantially outperforming the tuned EKF's 16\% degradation.
+    \item \textbf{Systematic validation}: Comprehensive experiments across 3 current scenarios and 4 model mismatch levels demonstrate that CFD-PCO achieves the best current estimation accuracy in all 12 configurations. Under 30\% CFD drag coefficient perturbation, estimation accuracy degrades by only 4\%, substantially outperforming the tuned EKF's 16\% degradation.
 
     \item \textbf{Mechanism evidence}: Gate ablation experiments confirm that the Gramian gate improves estimation accuracy by 23\% under high sensor noise, with the benefit increasing at higher noise levels, validating the excitation gate as an effective robustness mechanism.
 

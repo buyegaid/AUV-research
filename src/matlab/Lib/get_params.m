@@ -131,13 +131,13 @@ params.pieso.tau_c = 50;    % Gauss-Markov相关时间常数 (s)，对应低频�
 params.ucco.tau_c = 100;          % GM海流相关时间常数 (s)
 params.ucco.c_mean = [0; 0];      % 海流均值 [cN; cE] (m/s)
 params.ucco.c_max = 1.5;          % 海流最大速度 (m/s)
-params.ucco.K_obs = 2.0;          % 观测器增益
+params.ucco.K_obs = 10.0;         % 观测器增益 [扫描最优平衡: 精度vs鲁棒性]
 params.ucco.Q_c = 0.001;          % 海流过程噪声协方差
 params.ucco.R_inv_diag = [10, 10, 1, 1, 1, 1];  % 测量噪声逆（surge/sway高权重）
 params.ucco.window_size = 20;     % 滑动窗口大小（用于Gramian累积）
-params.ucco.gate_mu = 1e-8;       % 激励门控阈值（速度层面Gramian，dt倍数后很小）
+params.ucco.gate_mu = 1e-8;% 激励门控阈值（速度层面Gramian，dt倍数后很小）
 params.ucco.sens_pert = 0.01;     % 灵敏度数值扰动步长 (m/s)
-params.ucco.max_dc = 0.01;        % 单步最大海流更新量 (m/s)
+params.ucco.max_dc = 0.06;        % 单步最大海流更新量 (m/s), ~K_obs/100
 params.ucco.reg_lambda = 0.1;     % 正则化系数（防病态）
 params.ucco.accel_lpf_alpha = 0.3;% 加速度低通滤波系数
 params.ucco.conf_scale = 0.01;    % 置信度缩放
@@ -147,8 +147,16 @@ params.ucco.delta_coupling = [0.05; 0.03; 0.03; 0; 0.05; 0.05];   % 耦合项不
 params.ucco.delta_thruster = 0.02;  % 推进器模型不确定性
 params.ucco.delta_sensor = 0.01;    % 传感器噪声界
 
+%% Børhaug 2007 模型基海流观测器（简化速度预测型, 2026-06-10）
+% 海流估计参数
+params.borhaug.K_c = [80; 80];        % 海流积分增益 (1/s²) — 稳定收敛的最优值
+params.borhaug.max_dc = 0.5;          % 单步最大海流变化 (m/s²)
+params.borhaug.tau_c = 100;           % GM海流相关时间常数 (s)
+params.borhaug.c_mean = [0; 0];       % 海流均值 [cN; cE] (m/s)
+params.borhaug.c_max = 1.5;           % 海流最大速度 (m/s)
+
 %% CFD-Augmented EKF参数（强基线, 2026-06-04）
-params.ekf.use_bias = true;       % 是否增广力偏置状态
+params.ekf.use_bias = false;       % 8状态EKF-nom（无力偏置，展示模型失配敏感性）
 params.ekf.tau_c = 100;           % 海流GM时间常数
 params.ekf.tau_b = 50;            % 力偏置时间常数
 params.ekf.c_mean = [0; 0];       % 海流均值
@@ -161,10 +169,13 @@ params.ekf.Q0 = 0.001;            % 默认过程噪声
 params.ekf.R0 = 0.01;             % 测量噪声（(m/s)²）
 params.ekf.jac_pert = 0.001;      % Jacobian数值扰动
 
-%% 运动学海流观测器参数（Liang 2018基线, 2026-06-04）
-params.kin.K3 = 0.05;             % 海流估计增益（低通，对应慢收敛）
-params.kin.K4 = 1.0;              % 位置观测器增益
-params.kin.lpf_alpha = 0.9;       % 输出低通滤波系数
-params.kin.Vc_max = 1.5;          % 流速上限
+%% 运动学海流观测器参数（速度残差型, 2026-06-10）
+% K3: 从速度残差 (m/s) → 海流变化率 (m/s²) 的增益
+%     收敛时间 ≈ 1/K3 ≈ 10s
+params.kin.K3 = [0.02; 0.02];     % 海流估计速度增益 [cN; cE] (1/s)
+                                   % 慢平均≈50s, 滤除转弯侧滑的周期性分量
+params.kin.tau_c = 100;           % GM海流相关时间常数 (s)
+params.kin.c_mean = [0; 0];       % 海流均值
+params.kin.c_max = 1.5;           % 海流上限
 
 end

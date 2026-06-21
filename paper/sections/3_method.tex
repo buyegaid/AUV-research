@@ -1,6 +1,6 @@
-\section{EG-UCCO Observer Design}
+\section{CFD-PCO Observer Design}
 
-The core idea of EG-UCCO is to perform one-step-ahead velocity prediction using the CFD-pre-calibrated dynamics model, map the prediction residual to a current estimate gradient via sensitivity analysis, and update only when the excitation condition is satisfied.
+The core idea of CFD-PCO is to perform one-step-ahead velocity prediction using the CFD-pre-calibrated dynamics model, map the prediction residual to a current estimate gradient via sensitivity analysis, and update only when the excitation condition is satisfied.
 
 \subsection{Velocity Prediction Architecture}
 
@@ -95,4 +95,4 @@ The current estimate $\hat{\bm{c}}$ is ultimately used for feedforward compensat
     \label{eq:feedforward}
 \end{equation}
 
-\textbf{Compensation ablation discovery}: During tests injecting individual components of $\hat{\bm{d}}$ into the SMC control law, we discovered an important coupling phenomenon---surge feedforward compensation (\texttt{hat\_d(1)}) severely degrades heading control, worsening heading RMSE from 0.14\,rad to 0.93\,rad (surge-only compensation). The root cause is that main thruster RPM changes indirectly affect yaw moment through the thrust allocation matrix in the XHY AUV's 5-thruster configuration, creating a surge-yaw dynamic coupling. Based on this finding, EG-UCCO employs a \textbf{yaw-only feedforward} strategy: only $\hat{\bm{d}}(6)$ (yaw moment compensation) is injected into the control law, while the surge channel is handled independently by the speed PID controller. This design choice, validated as optimal through ablation experiments, is motivated by engineering practicality and avoids cross-channel coupling.
+\textbf{Compensation ablation discovery}: During tests injecting individual components of $\hat{\bm{d}}$ into the SMC control law, we discovered an important coupling phenomenon---surge feedforward compensation (\texttt{hat\_d(1)}) severely degrades heading control, worsening heading RMSE from 0.14\,rad to 0.93\,rad (surge-only compensation). The root cause is that main thruster RPM changes indirectly affect yaw moment through the thrust allocation matrix in the XHY AUV's 5-thruster configuration, creating a surge-yaw dynamic coupling. Based on this finding, CFD-PCO employs a \textbf{yaw-only feedforward} strategy: only $\hat{\bm{d}}(6)$ (yaw moment compensation) is injected into the control law, while the surge channel is handled independently by the speed PID controller. This design choice, validated as optimal through ablation experiments, is motivated by engineering practicality and avoids cross-channel coupling.

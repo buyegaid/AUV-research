@@ -1,10 +1,18 @@
+% ============================================================
+% EG-UCCO 论文参考文献
+% 最后更新: 2026-06-09
+% ============================================================
+
+% ---- 海洋器动力学基础 ----
 @book{fossen2011handbook,
   author    = {Thor I. Fossen},
   title     = {Handbook of Marine Craft Hydrodynamics and Motion Control},
   publisher = {John Wiley \& Sons},
   year      = {2011},
+  doi       = {10.1002/9781119994138},
 }
 
+% ---- 动力学海流观测器（模型基） ----
 @inproceedings{borhaug2007model,
   author    = {Even B{\o}rhaug and Luca Pivano and Kristin Y. Pettersen and Tor Arne Johansen},
   title     = {A Model-Based Ocean Current Observer for {6DOF} Underwater Vehicles},
@@ -23,6 +31,18 @@
   doi       = {10.1109/ACCESS.2018.2879469},
 }
 
+@article{aguiar2007dynamic,
+  author    = {A. Pedro Aguiar and Ant{\'o}nio M. Pascoal},
+  title     = {Dynamic Positioning and Way-Point Tracking of Underactuated {AUVs} in the Presence of Ocean Currents},
+  journal   = {International Journal of Control},
+  volume    = {80},
+  number    = {7},
+  pages     = {1092--1108},
+  year      = {2007},
+  doi       = {10.1080/00207170701268882},
+}
+
+% ---- 运动学海流观测器 ----
 @article{liang2018three,
   author    = {Xiao Liang and Xingru Qu and Yuanhang Hou and Qiang Ma},
   title     = {Three-Dimensional Trajectory Tracking Control of an Underactuated Autonomous Underwater Vehicle Based on Ocean Current Observer},
@@ -44,6 +64,49 @@
   doi       = {10.3390/drones8110672},
 }
 
+@article{zeng2017adaptive,
+  author    = {Jiangfeng Zeng and Lei Wan and Yueming Li and Zaopeng Dong and Yinghao Zhang},
+  title     = {Adaptive Line-of-Sight Path Following Control for Underactuated Autonomous Underwater Vehicles in the Presence of Ocean Currents},
+  journal   = {International Journal of Advanced Robotic Systems},
+  volume    = {14},
+  number    = {6},
+  year      = {2017},
+  doi       = {10.1177/1729881417748127},
+}
+
+@article{dong2016horizontal,
+  author    = {Zaopeng Dong and Lei Wan and Tao Liu and Jiangfeng Zeng},
+  title     = {Horizontal-Plane Trajectory-Tracking Control of an Underactuated Unmanned Marine Vehicle in the Presence of Ocean Currents},
+  journal   = {International Journal of Advanced Robotic Systems},
+  volume    = {13},
+  year      = {2016},
+  doi       = {10.5772/63634},
+}
+
+% ---- ALOS 制导 ----
+@article{fossen2015adaptive,
+  author    = {Thor I. Fossen and Kristin Y. Pettersen and Roberto Galeazzi},
+  title     = {Line-of-Sight Path Following for Dubins Paths with Adaptive Sideslip Compensation of Drift Forces},
+  journal   = {IEEE Transactions on Control Systems Technology},
+  volume    = {23},
+  number    = {2},
+  pages     = {820--827},
+  year      = {2015},
+  doi       = {10.1109/TCST.2014.2338354},
+}
+
+@article{fossen2015direct,
+  author    = {Thor I. Fossen and Anastasios M. Lekkas},
+  title     = {Direct and Indirect Adaptive Integral Line-of-Sight Path-Following Controllers for Marine Craft Exposed to Ocean Currents},
+  journal   = {International Journal of Adaptive Control and Signal Processing},
+  volume    = {31},
+  number    = {4},
+  pages     = {445--463},
+  year      = {2015},
+  doi       = {10.1002/acs.2550},
+}
+
+% ---- ESO 基线及相关变体 ----
 @article{xie2020extended,
   author    = {Shaolong Xie and Xiaoming Wang and others},
   title     = {Extended State Observer-Based Robust Control of {6-DoF} Autonomous Hovering Underwater Vehicles},
@@ -51,12 +114,218 @@
   year      = {2020},
 }
 
-@article{aguiar2007dynamic,
-  author    = {A. Pedro Aguiar and Ant{\'o}nio M. Pascoal},
-  title     = {Dynamic Positioning and Way-Point Tracking of Underactuated {AUVs} in the Presence of Ocean Currents},
-  journal   = {International Journal of Control},
-  volume    = {80},
-  number    = {7},
-  pages     = {1092--1108},
-  year      = {2007},
+@article{kang2020antidisturbance,
+  author    = {Song Kang and Yongfeng Rong and Wusheng Chou},
+  title     = {Antidisturbance Control for {AUV} Trajectory Tracking Based on Fuzzy Adaptive Extended State Observer},
+  journal   = {Sensors},
+  volume    = {20},
+  number    = {24},
+  pages     = {7084},
+  year      = {2020},
+  doi       = {10.3390/s20247084},
+}
+
+@article{lamraoui2019path,
+  author    = {Habib Choukri Lamraoui and Qidan Zhu},
+  title     = {Path Following Control of Fully-Actuated Autonomous Underwater Vehicle in Presence of Fast-Varying Disturbances},
+  journal   = {Applied Ocean Research},
+  volume    = {86},
+  pages     = {40--46},
+  year      = {2019},
+  doi       = {10.1016/j.apor.2019.02.015},
+}
+
+@article{guerrero2020observation,
+  author    = {Jes{\'u}s Guerrero and Jorge Torres and Vincent Creuze and Ahmed Chemori},
+  title     = {Observation-Based Nonlinear Proportional--Derivative Control for Robust Trajectory Tracking for Autonomous Underwater Vehicles},
+  journal   = {IEEE Journal of Oceanic Engineering},
+  volume    = {45},
+  number    = {4},
+  pages     = {1190--1202},
+  year      = {2020},
+  doi       = {10.1109/JOE.2019.2924561},
+}
+
+@article{ji2023trajectory,
+  author    = {Daxiong Ji and Xinwei Wang and Minghui Xu and Qiang Zhang and Sanjay Sharma and Robert Sutton},
+  title     = {Trajectory Tracking of {AUV} under Current Disturbance Based on Adaptive {LADRC}},
+  booktitle = {International Conference on Automation, Robotics and Computer Engineering (ICARCE)},
+  pages     = {1--5},
+  year      = {2023},
+  doi       = {10.1109/ICARCE59252.2024.10492523},
+}
+
+@article{xu2024robust,
+  author    = {Yufei Xu and Ziyang Zhang and Lei Wan},
+  title     = {Robust Prescribed-Time {ESO}-Based Practical Predefined-Time {SMC} for Benthic {AUV} Trajectory-Tracking Control with Uncertainties and Environment Disturbance},
+  journal   = {Journal of Marine Science and Engineering},
+  volume    = {12},
+  number    = {6},
+  pages     = {1014},
+  year      = {2024},
+  doi       = {10.3390/jmse12061014},
+}
+
+@article{wang2024accurate,
+  author    = {Jianhui Wang and Haoyuan Wang and Zikai Hu and Jiarui Liu and Kairui Chen},
+  title     = {Accurate Trajectory Tracking Control for {AUV} under State Constraints with a Rapid Stability Dimensionality-Augmented State Observer},
+  journal   = {International Journal of Robust and Nonlinear Control},
+  volume    = {34},
+  number    = {16},
+  pages     = {11312--11332},
+  year      = {2024},
+  doi       = {10.1002/rnc.7591},
+}
+
+@article{he2025three,
+  author    = {Long He and Ya Zhang and Mengting Xie and Zehui Yuan and Chenrui Bai},
+  title     = {Three-Dimensional Trajectory Tracking Control of Underactuated {AUV} Based on Fractional-Order {PID} and Super-Twisting Extended State Observer},
+  journal   = {Fractal and Fractional},
+  volume    = {9},
+  number    = {9},
+  pages     = {580},
+  year      = {2025},
+  doi       = {10.3390/fractalfract9090580},
+}
+
+@article{zhang2024variablegain,
+  author    = {Xuqi Zhang and Lihua Hao and Huiying Liu},
+  title     = {Variable-Gain Extended State Observer-Based Data-Driven Trajectory Tracking Control of Unmanned Marine Vehicles Under Disturbances},
+  booktitle = {IEEE ONCON},
+  pages     = {1--6},
+  year      = {2024},
+  doi       = {10.1109/ONCON62778.2024.10931469},
+}
+
+% ---- 降阶/双闭环 ESO ----
+@article{dai2022dual,
+  author    = {Xiaoqiang Dai and Hewei Xu and Hong-xu Ma and Jianjun Ding and Qiang Lai},
+  title     = {Dual Closed Loop {AUV} Trajectory Tracking Control Based on Finite Time and State Observer},
+  journal   = {Mathematical Biosciences and Engineering},
+  volume    = {19},
+  number    = {11},
+  pages     = {11086--11113},
+  year      = {2022},
+  doi       = {10.3934/mbe.2022517},
+}
+
+% ---- EKF/UKF 基海流估计 ----
+@article{long2021trajectory,
+  author    = {Chengqi Long and Xiaohui Qin and Yougang Bian and Manjiang Hu},
+  title     = {Trajectory Tracking Control of {ROVs} Considering External Disturbances and Measurement Noises Using {ESKF}-Based {MPC}},
+  journal   = {Ocean Engineering},
+  volume    = {241},
+  pages     = {110012},
+  year      = {2021},
+  doi       = {10.1016/j.oceaneng.2021.110012},
+}
+
+@article{kim2020cooperative,
+  author    = {Jonghoek Kim},
+  title     = {Cooperative Localization and Unknown Currents Estimation Using Multiple Autonomous Underwater Vehicles},
+  journal   = {IEEE Robotics and Automation Letters},
+  volume    = {5},
+  number    = {2},
+  pages     = {2365--2371},
+  year      = {2020},
+  doi       = {10.1109/LRA.2020.2972880},
+}
+
+% ---- Set-Membership 估计 ----
+@article{jaulin2009robust,
+  author    = {Luc Jaulin},
+  title     = {Robust Set-Membership State Estimation; Application to Underwater Robotics},
+  journal   = {Automatica},
+  volume    = {45},
+  number    = {1},
+  pages     = {202--206},
+  year      = {2009},
+  doi       = {10.1016/j.automatica.2008.06.013},
+}
+
+@article{caiti2002set,
+  author    = {Andrea Caiti and Andrea Garulli and Flavio Livide and Domenico Prattichizzo},
+  title     = {Set-Membership Acoustic Tracking of Autonomous Underwater Vehicles},
+  journal   = {Acta Acustica united with Acustica},
+  volume    = {88},
+  pages     = {648--652},
+  year      = {2002},
+}
+
+% ---- 持久激励与可辨识性 ----
+@phdthesis{reis2016improved,
+  author    = {Jo{\~a}o Filipe Reis},
+  title     = {Improved Guidance, Navigation, and Control for Autonomous Underwater Vehicles: Theory and Experiment},
+  school    = {Universidade do Algarve},
+  year      = {2016},
+}
+
+% ---- SMC 控制 ----
+@article{vu2021robust,
+  author    = {Mai The Vu and H. N. N. Le and T. T. Thanh and T. T. Huynh and Q. T. Van and T. D. Hoang and T. D. Do},
+  title     = {Robust Position Control of an Over-actuated Underwater Vehicle under Model Uncertainties and Ocean Current Effects Using Dynamic Sliding Mode Surface and Optimal Allocation Control},
+  journal   = {Sensors},
+  volume    = {21},
+  number    = {3},
+  pages     = {747},
+  year      = {2021},
+  doi       = {10.3390/s21030747},
+}
+
+@article{nerkar2022design,
+  author    = {S. S. Nerkar and P. S. Londhe and B. M. Patre},
+  title     = {Design of Super Twisting Disturbance Observer Based Control for Autonomous Underwater Vehicle},
+  journal   = {International Journal of Dynamics and Control},
+  volume    = {10},
+  pages     = {306--322},
+  year      = {2022},
+  doi       = {10.1007/s40435-021-00812-z},
+}
+
+% ---- CFD 水动力建模 ----
+@article{hong2022numerical,
+  author    = {Bingbing Hong and Fanyi Wang and Xiaoni Zhang and Jingyi Xu},
+  title     = {Numerical Study on Hydrodynamic Coefficient Estimation of an Underactuated Underwater Vehicle},
+  journal   = {Journal of Marine Science and Engineering},
+  volume    = {10},
+  number    = {8},
+  pages     = {1049},
+  year      = {2022},
+  doi       = {10.3390/jmse10081049},
+}
+
+@article{lin2022estimation,
+  author    = {Y. Lin and Z. Li},
+  title     = {The Estimation of Hydrodynamic Coefficients of an Autonomous Underwater Vehicle by Comparing a Dynamic Mesh Model with a Horizontal Planar Motion Mechanism Experiment},
+  journal   = {Ocean Engineering},
+  volume    = {249},
+  pages     = {110847},
+  year      = {2022},
+  doi       = {10.1016/j.oceaneng.2022.110847},
+}
+
+% ---- Gauss-Markov 海流建模 ----
+@article{yuan2022gauss,
+  author    = {Zehui Yuan and others},
+  title     = {Gauss-Markov Ocean Current Modeling for {AUV} Simulation Environments},
+  journal   = {Ocean Engineering},
+  year      = {2022},
+}
+
+% ---- 综述 ----
+@article{shehu2022survey,
+  author    = {S. Shehu and Vincent Creuze and Ahmed Chemori},
+  title     = {A Survey on Tracking Control of Unmanned Underwater Vehicles: Experiments-Based Approach},
+  journal   = {Annual Reviews in Control},
+  volume    = {54},
+  pages     = {156--179},
+  year      = {2022},
+  doi       = {10.1016/j.arcontrol.2022.09.002},
+}
+
+@article{li2022auv,
+  author    = {Z. Li and J. Du and others},
+  title     = {{AUV} Trajectory Tracking Models and Control Strategies: A Review},
+  journal   = {Journal of Marine Science and Engineering},
+  year      = {2022},
 }
