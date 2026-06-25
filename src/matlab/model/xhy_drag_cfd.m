@@ -1,10 +1,7 @@
 function [tau_drag, D] = xhy_drag_cfd(nu_r, mismatch_pct, mismatch_seed)
-% XHY_DRAG_CFD 阻力计算（CFD RANS 计算, 2026-06-21 更新）
+% XHY_DRAG_CFD 阻力计算
 %   平动阻力: Fluent 直航 CFD, k-ω SST, 300W网格收敛结果
-%   转动阻尼: Fluent MRF + 滑移网格 CFD, k-ω SST, 中网格（2026-06-18）
-%   平动数据来源: Obsidian [[260617 小黄鱼 CFD 直航阻尼 新]]
-%   转动数据来源: Obsidian [[260618 小黄鱼 CFD 旋转阻尼 新]]
-%   新CFD坐标系(前右下) → 体坐标系(前右下): 直接对应, 无需转换
+%   转动阻尼: Fluent MRF + 滑移网格 CFD, k-ω SST, 中网格
 %
 %   可选参数:
 %     mismatch_pct:  0-100, 阻力系数扰动百分比 (默认0=名义模型)
@@ -19,10 +16,7 @@ if nargin < 3, mismatch_seed = 1; end
 u = nu_r(1); v = nu_r(2); w = nu_r(3);
 p = nu_r(4); q = nu_r(5); r = nu_r(6);
 
-% 名义阻力系数（CFD RANS 计算结果, 2026-06-17/18, 300W/中网格）
-% 新CFD坐标系(前右下)与体坐标系一致, 直接对应
-% 平动数据来源: Obsidian [[260617 小黄鱼 CFD 直航阻尼 新]]
-% 转动数据来源: Obsidian [[260618 小黄鱼 CFD 旋转阻尼 新]]
+% 名义阻力系数应
 d_X1 = 0.65;       d_X2 = 10.85;    % Surge: CFD X轴(前), 300W网格
 d_Y1 = 1.67;       d_Y2 = 178.59;   % Sway: CFD Y轴(右), 300W网格
 d_Z1 = 2.95;       d_Z2 = 40.83;    % Heave: CFD Z轴(下), 300W网格

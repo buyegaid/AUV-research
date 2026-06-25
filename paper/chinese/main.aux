@@ -1,0 +1,83 @@
+\relax 
+\providecommand\hyper@newdestlabel[2]{}
+\providecommand*\HyPL@Entry[1]{}
+\citation{fossen2011handbook}
+\citation{borhaug2007model}
+\citation{liang2018three,he2024three}
+\citation{xie2020extended}
+\citation{kim2018estimating}
+\citation{borhaug2007model}
+\HyPL@Entry{0<</S/D>>}
+\@writefile{toc}{\contentsline {section}{\numberline {1}引言}{1}{section.1}\protected@file@percent }
+\citation{fossen2011handbook}
+\@writefile{toc}{\contentsline {section}{\numberline {2}问题描述}{2}{section.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.1}AUV动力学模型}{2}{subsection.2.1}\protected@file@percent }
+\newlabel{eq:dynamics}{{1}{2}{AUV动力学模型}{equation.2.1}{}}
+\newlabel{eq:drag}{{2}{2}{AUV动力学模型}{equation.2.2}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {1}{\ignorespaces XHY AUV CFD标定阻力系数}}{3}{table.caption.1}\protected@file@percent }
+\providecommand*\caption@xref[2]{\@setref\relax\@undefined{#1}}
+\newlabel{tab:cfd}{{1}{3}{XHY AUV CFD标定阻力系数}{table.caption.1}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.2}海流参数化}{3}{subsection.2.2}\protected@file@percent }
+\newlabel{eq:current_ned}{{3}{3}{海流参数化}{equation.2.3}{}}
+\newlabel{eq:current_body}{{4}{3}{海流参数化}{equation.2.4}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.3}CFD模型不确定性的量化表征}{3}{subsection.2.3}\protected@file@percent }
+\newlabel{eq:mismatch}{{5}{3}{CFD模型不确定性的量化表征}{equation.2.5}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {3}PC-RCO观测器设计}{3}{section.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.1}速度预测架构}{3}{subsection.3.1}\protected@file@percent }
+\newlabel{eq:prediction}{{6}{3}{速度预测架构}{equation.3.6}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.2}灵敏度分析}{4}{subsection.3.2}\protected@file@percent }
+\newlabel{eq:sensitivity}{{7}{4}{灵敏度分析}{equation.3.7}{}}
+\newlabel{eq:numerical_phi}{{8}{4}{灵敏度分析}{equation.3.8}{}}
+\newlabel{eq:gramian}{{9}{4}{灵敏度分析}{equation.3.9}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.3}连续Gauss-Markov正则化}{4}{subsection.3.3}\protected@file@percent }
+\newlabel{eq:continuous_gm}{{10}{4}{连续Gauss-Markov正则化}{equation.3.10}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.4}自适应限幅的梯度更新}{5}{subsection.3.4}\protected@file@percent }
+\newlabel{eq:update}{{11}{5}{自适应限幅的梯度更新}{equation.3.11}{}}
+\newlabel{eq:adaptive_clamp}{{12}{5}{自适应限幅的梯度更新}{equation.3.12}{}}
+\newlabel{eq:noise_est}{{13}{5}{自适应限幅的梯度更新}{equation.3.13}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.5}前馈补偿策略}{5}{subsection.3.5}\protected@file@percent }
+\newlabel{eq:feedforward}{{14}{5}{前馈补偿策略}{equation.3.14}{}}
+\citation{liang2018three}
+\citation{borhaug2007model}
+\@writefile{toc}{\contentsline {section}{\numberline {4}数值验证}{6}{section.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.1}仿真设置}{6}{subsection.4.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.2}模型失配鲁棒性}{6}{subsection.4.2}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {2}{\ignorespaces 模型失配下的海流估计精度（圆形轨迹，低噪声$\sigma _v=0.02$ m/s，5种子）}}{7}{table.caption.2}\protected@file@percent }
+\newlabel{tab:accuracy}{{2}{7}{模型失配下的海流估计精度（圆形轨迹，低噪声$\sigma _v=0.02$ m/s，5种子）}{table.caption.2}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.3}连续GM正则化消融}{7}{subsection.4.3}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {3}{\ignorespaces 连续GM正则化消融（RMSE$_{V_c}$，m/s，5种子）}}{7}{table.caption.3}\protected@file@percent }
+\newlabel{tab:gm_ablation}{{3}{7}{连续GM正则化消融（RMSE$_{V_c}$，m/s，5种子）}{table.caption.3}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.4}自适应限幅：精度与物理可接受性的权衡}{8}{subsection.4.4}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {4}{\ignorespaces 限幅阈值敏感性（阶跃海流+30\%失配，5种子）}}{8}{table.caption.4}\protected@file@percent }
+\newlabel{tab:clamp_sensitivity}{{4}{8}{限幅阈值敏感性（阶跃海流+30\%失配，5种子）}{table.caption.4}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {5}{\ignorespaces 压力矩阵：噪声$\times $失配下的限幅效果（圆形，3种子）}}{8}{table.caption.5}\protected@file@percent }
+\newlabel{tab:stress_grid}{{5}{8}{压力矩阵：噪声$\times $失配下的限幅效果（圆形，3种子）}{table.caption.5}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.5}基线方法多目标对比}{8}{subsection.4.5}\protected@file@percent }
+\citation{prestero2001development}
+\@writefile{lot}{\contentsline {table}{\numberline {6}{\ignorespaces 多目标对比（圆形，20\%失配，低噪声，5种子）}}{9}{table.caption.6}\protected@file@percent }
+\newlabel{tab:baseline_pareto}{{6}{9}{多目标对比（圆形，20\%失配，低噪声，5种子）}{table.caption.6}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.6}跨平台验证：REMUS 100}{9}{subsection.4.6}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {7}{\ignorespaces REMUS 100跨平台验证（圆形，0\%失配，低噪声）}}{9}{table.caption.7}\protected@file@percent }
+\newlabel{tab:remus}{{7}{9}{REMUS 100跨平台验证（圆形，0\%失配，低噪声）}{table.caption.7}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.7}局限：反馈控制AUV中的激励门控}{9}{subsection.4.7}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {1}{\ignorespaces 模型失配鲁棒性:PC-RCO在30\%失配下退化42\%而EKF退化77\%。}}{10}{figure.caption.8}\protected@file@percent }
+\newlabel{fig:degradation}{{1}{10}{模型失配鲁棒性:PC-RCO在30\%失配下退化42\%而EKF退化77\%。}{figure.caption.8}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {5}讨论}{10}{section.5}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.1}连续正则化优于二值门控}{10}{subsection.5.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.2}精度-物理可接受性权衡}{10}{subsection.5.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.3}噪声驱动与失配驱动的限幅需求}{10}{subsection.5.3}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {2}{\ignorespaces 压力矩阵:高噪声条件下无限制变体出现29--33倍的单步跳变。[待重新生成]}}{11}{figure.caption.9}\protected@file@percent }
+\newlabel{fig:stress_grid}{{2}{11}{压力矩阵:高噪声条件下无限制变体出现29--33倍的单步跳变。[待重新生成]}{figure.caption.9}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.4}安全性视角}{11}{subsection.5.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.5}局限性}{11}{subsection.5.5}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {6}结论}{11}{section.6}\protected@file@percent }
+\bibstyle{unsrt}
+\bibdata{references}
+\bibcite{fossen2011handbook}{1}
+\bibcite{borhaug2007model}{2}
+\bibcite{liang2018three}{3}
+\bibcite{he2024three}{4}
+\bibcite{xie2020extended}{5}
+\bibcite{kim2018estimating}{6}
+\bibcite{prestero2001development}{7}
+\gdef \@abspage@last{13}

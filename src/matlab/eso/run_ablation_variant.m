@@ -33,9 +33,9 @@ switch variant_name
     case 'CFDLuenberger', obs.c_hat=[0;0]; clear borhaug_current_observer;
     case 'EKF',          obs.x_hat=[]; obs.P=[];
     case 'PCRCO',       obs.c_hat=[0;0]; clear eg_ucco_simple;
-    case 'NoPredCorr',   obs.c_hat=[0;0];
-    case 'NoGM',         obs.c_hat=[0;0]; clear eg_ucco_simple;
-    case 'NoClamp',      obs.c_hat=[0;0]; clear eg_ucco_simple;
+	    case 'NoPredCorr',   obs.c_hat=[0;0]; pcrco_no_predcorr([],[],[],[],[],[],[],true);
+	    case 'NoGM',         obs.c_hat=[0;0]; pcrco_no_gm([],[],[],[],[],[],[],true);
+	    case 'NoClamp',      obs.c_hat=[0;0]; pcrco_no_clamp([],[],[],[],[],[],[],true);
 end
 
 c_hist = zeros(N,2);
@@ -74,12 +74,12 @@ for i = 1:N
             obs.c_hat=ekf_aux.c_hat;
         case 'PCRCO'
             [obs.c_hat,~]=eg_ucco_simple(obs.c_hat,nu_meas,tau_thr,psi,M_const,params.ucco,dt);
-        case 'NoPredCorr'
-            [obs.c_hat,~]=ucco_no_predcorr(obs.c_hat,nu_meas,tau_thr,psi,M_const,params.ucco,dt);
-        case 'NoGM'
-            [obs.c_hat,~]=ucco_no_gm(obs.c_hat,nu_meas,tau_thr,psi,M_const,params.ucco,dt);
-        case 'NoClamp'
-            [obs.c_hat,~]=ucco_no_clamp(obs.c_hat,nu_meas,tau_thr,psi,M_const,params.ucco,dt);
+	        case 'NoPredCorr'
+	            [obs.c_hat,~]=pcrco_no_predcorr(obs.c_hat,nu_meas,tau_thr,psi,M_const,params.ucco,dt);
+	        case 'NoGM'
+	            [obs.c_hat,~]=pcrco_no_gm(obs.c_hat,nu_meas,tau_thr,psi,M_const,params.ucco,dt);
+	        case 'NoClamp'
+	            [obs.c_hat,~]=pcrco_no_clamp(obs.c_hat,nu_meas,tau_thr,psi,M_const,params.ucco,dt);
     end
     c_hist(i,:) = obs.c_hat';
 
@@ -93,144 +93,14 @@ rmse = sqrt(mean(sum(c_err.^2,2)));
 result.UCCO.RMSE = rmse;
 end
 
-%% ===== 消融变体实现 =====
-
-% NoPredCorr: 用加速度残差替代速度预测-校正
-function [c_hat, aux] = ucco_no_predcorr(c_hat, nu_meas, tau, psi, M, params, dt)
-persistent nu_prev is_init a_filt
-if isempty(is_init), is_init=true; a_filt=zeros(6,1); end
-if isempty(nu_prev), nu_prev=nu_meas; end
-if isempty(c_hat), c_hat=[0;0]; end
-
-u_c=c_hat(1)*cos(psi)+c_hat(2)*sin(psi); v_c=-c_hat(1)*sin(psi)+c_hat(2)*cos(psi);
-nu_c=[u_c;v_c;0;0;0;0]; nu_r=nu_prev-nu_c;
-[tau_drag,~]=xhy_drag_cfd(nu_r);
-[C_nu,g_nu]=compute_cg_standalone(nu_r,psi,M);
-r=nu_prev(6); Dnu_c=[r*v_c;-r*u_c;0;0;0;0];
-a_model=Dnu_c+M\(tau+tau_drag-C_nu*nu_r-g_nu);
-
-% 关键改变: 用加速度残差 e_acc = a_meas_filt - a_model
-a_raw=(nu_meas-nu_prev)/dt;
-alpha=params.accel_lpf_alpha;
-a_filt=alpha*a_raw+(1-alpha)*a_filt;
-e_acc=a_filt(1:2)-a_model(1:2);
-
-% 数值灵敏度（加速度层面）
-delta=params.sens_pert; Phi=zeros(2,2);
-for j=1:2
-    cp=c_hat; cp(j)=cp(j)+delta;
-    u_c_p=cp(1)*cos(psi)+cp(2)*sin(psi); v_c_p=-cp(1)*sin(psi)+cp(2)*cos(psi);
-    nu_r_p=nu_prev-[u_c_p;v_c_p;0;0;0;0];
-    [td_p,~]=xhy_drag_cfd(nu_r_p);
-    [Cp,gp]=compute_cg_standalone(nu_r_p,psi,M);
-    Dnc_p=[nu_prev(6)*v_c_p;-nu_prev(6)*u_c_p;0;0;0;0];
-    a_p=Dnc_p+M\(tau+td_p-Cp*nu_r_p-gp);
-    Phi(:,j)=(a_p(1:2)-a_model(1:2))/delta;
-end
-
-Wc=Phi'*Phi; lambda_min=min(eig(Wc));
-gamma_eff=params.K_obs*100;
-gain=gamma_eff/(1+lambda_min*1e6);
-dc=gain*Phi'*e_acc;
-dc=max(-params.max_dc,min(params.max_dc,dc));
-c_hat=c_hat+dc;
-alpha_gm=exp(-dt/params.tau_c);
-c_hat=alpha_gm*c_hat+(1-alpha_gm)*params.c_mean;
-c_hat=max(-params.c_max,min(params.c_max,c_hat));
-nu_prev=nu_meas;
-aux.c_hat=c_hat;
-end
-
-% NoGM: tau_c→∞, 无GM衰减
-function [c_hat, aux] = ucco_no_gm(c_hat, nu_meas, tau, psi, M, params, dt)
-persistent nu_prev is_init
-if isempty(is_init), is_init=true; end
-if isempty(nu_prev), nu_prev=nu_meas; end
-if isempty(c_hat), c_hat=[0;0]; end
-
-u_c=c_hat(1)*cos(psi)+c_hat(2)*sin(psi); v_c=-c_hat(1)*sin(psi)+c_hat(2)*cos(psi);
-nu_c=[u_c;v_c;0;0;0;0]; nu_r=nu_prev-nu_c;
-[tau_drag,~]=xhy_drag_cfd(nu_r);
-[C_nu,g_nu]=compute_cg_standalone(nu_r,psi,M);
-r=nu_prev(6); Dnu_c=[r*v_c;-r*u_c;0;0;0;0];
-a_model=Dnu_c+M\(tau+tau_drag-C_nu*nu_r-g_nu);
-nu_pred=nu_prev+a_model*dt;
-e_vel=nu_meas(1:2)-nu_pred(1:2);
-
-delta=params.sens_pert; Phi=zeros(2,2);
-for j=1:2
-    cp=c_hat; cp(j)=cp(j)+delta;
-    u_c_p=cp(1)*cos(psi)+cp(2)*sin(psi); v_c_p=-cp(1)*sin(psi)+cp(2)*cos(psi);
-    nu_r_p=nu_prev-[u_c_p;v_c_p;0;0;0;0];
-    [td_p,~]=xhy_drag_cfd(nu_r_p);
-    [Cp,gp]=compute_cg_standalone(nu_r_p,psi,M);
-    Dnc_p=[nu_prev(6)*v_c_p;-nu_prev(6)*u_c_p;0;0;0;0];
-    a_p=Dnc_p+M\(tau+td_p-Cp*nu_r_p-gp);
-    nu_p=nu_prev+a_p*dt;
-    Phi(:,j)=(nu_p(1:2)-nu_pred(1:2))/delta;
-end
-
-Wc=Phi'*Phi; lambda_min=min(eig(Wc));
-gamma_eff=params.K_obs*100;
-gain=gamma_eff/(1+lambda_min*1e6);
-dc=gain*Phi'*e_vel;
-dc=max(-params.max_dc,min(params.max_dc,dc));
-c_hat=c_hat+dc;
-% 关键改变: 无GM衰减
-c_hat=max(-params.c_max,min(params.c_max,c_hat));
-nu_prev=nu_meas;
-aux.c_hat=c_hat;
-end
-
-% NoClamp: Δc_max→∞
-function [c_hat, aux] = ucco_no_clamp(c_hat, nu_meas, tau, psi, M, params, dt)
-persistent nu_prev is_init
-if isempty(is_init), is_init=true; end
-if isempty(nu_prev), nu_prev=nu_meas; end
-if isempty(c_hat), c_hat=[0;0]; end
-
-u_c=c_hat(1)*cos(psi)+c_hat(2)*sin(psi); v_c=-c_hat(1)*sin(psi)+c_hat(2)*cos(psi);
-nu_c=[u_c;v_c;0;0;0;0]; nu_r=nu_prev-nu_c;
-[tau_drag,~]=xhy_drag_cfd(nu_r);
-[C_nu,g_nu]=compute_cg_standalone(nu_r,psi,M);
-r=nu_prev(6); Dnu_c=[r*v_c;-r*u_c;0;0;0;0];
-a_model=Dnu_c+M\(tau+tau_drag-C_nu*nu_r-g_nu);
-nu_pred=nu_prev+a_model*dt;
-e_vel=nu_meas(1:2)-nu_pred(1:2);
-
-delta=params.sens_pert; Phi=zeros(2,2);
-for j=1:2
-    cp=c_hat; cp(j)=cp(j)+delta;
-    u_c_p=cp(1)*cos(psi)+cp(2)*sin(psi); v_c_p=-cp(1)*sin(psi)+cp(2)*cos(psi);
-    nu_r_p=nu_prev-[u_c_p;v_c_p;0;0;0;0];
-    [td_p,~]=xhy_drag_cfd(nu_r_p);
-    [Cp,gp]=compute_cg_standalone(nu_r_p,psi,M);
-    Dnc_p=[nu_prev(6)*v_c_p;-nu_prev(6)*u_c_p;0;0;0;0];
-    a_p=Dnc_p+M\(tau+td_p-Cp*nu_r_p-gp);
-    nu_p=nu_prev+a_p*dt;
-    Phi(:,j)=(nu_p(1:2)-nu_pred(1:2))/delta;
-end
-
-Wc=Phi'*Phi; lambda_min=min(eig(Wc));
-gamma_eff=params.K_obs*100;
-gain=gamma_eff/(1+lambda_min*1e6);
-dc=gain*Phi'*e_vel;
-% 关键改变: 无限幅
-c_hat=c_hat+dc;
-alpha_gm=exp(-dt/params.tau_c);
-c_hat=alpha_gm*c_hat+(1-alpha_gm)*params.c_mean;
-c_hat=max(-params.c_max,min(params.c_max,c_hat));
-nu_prev=nu_meas;
-aux.c_hat=c_hat;
-end
-
-%% 辅助
+%% ===== 辅助函数 =====
 function M=compute_M_constant()
 m=85.832; Ix=0.553864787+0.865274; Iy=2.162341935+5.011187; Iz=1.849137+4.541468;
 MRB=diag([m,m,m,Ix,Iy,Iz]); MA=diag([15.81,124.73,42.87,0.014,0.041,0.123]); M=MRB+MA;
 end
+
 function p=get_thr_params()
-p.rho=1026; p.D_prop_main=0.10; p.D_prop_aux=0.06;
-p.KT_main_fwd=0.0293; p.KT_main_rev=0.0201; p.KT_aux_fwd=0.327; p.KT_aux_rev=0.327;
+p.rho=1026; p.D_prop_main=0.08; p.D_prop_aux=0.06;
+p.KT_main_fwd=0.1489; p.KT_main_rev=0.0506; p.KT_aux_fwd=0.53; p.KT_aux_rev=0.71;  % 0616非饱和
 p.n_max=2500; p.x_vert_f=+0.344; p.x_vert_r=-0.293; p.x_side_f=+0.424; p.x_side_r=-0.376;
 end

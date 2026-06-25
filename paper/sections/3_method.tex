@@ -40,40 +40,49 @@ The sensitivity Gramian is defined as:
 
 $\bm{W}_c$ approximates the Fisher information matrix for current parameter estimation. Its minimum eigenvalue $\lambda_{\min}(\bm{W}_c)$ quantitatively characterizes the identifiability of current parameters under the current dynamic state.
 
-\subsection{Excitation Gate}
+\subsection{Continuous Gauss-Markov Regularization}
 
-\textbf{Identifiability analysis}: When the AUV is in steady straight-line motion ($r\approx 0$, $\dot{\bm{\nu}}\approx 0$), the current effect enters the dynamics primarily through the drag difference. In this regime, the sensitivity matrix is near-singular, $\lambda_{\min}(\bm{W}_c) \approx 0$, and $\bm{c}$ is not uniquely identifiable. Conversely, during maneuvers (turning $|r|>0$ or accelerating/decelerating $|\dot{u}|>0$), the Coriolis coupling and inertial terms provide additional identifiability information, increasing $\lambda_{\min}(\bm{W}_c)$ to identifiable levels.
-
-Based on this analysis, we design the excitation gate condition:
+Rather than employing a binary excitation gate that switches between gradient updates and GM propagation, PC-RCO applies the GM decay \emph{continuously} at every time step, in parallel with the gradient update:
 
 \begin{equation}
-    \text{Update condition}: \quad \lambda_{\min}(\bm{W}_c) > \mu_{\text{gate}}
-    \label{eq:gate}
+    \hat{\bm{c}}_{k+1} = e^{-\Delta t/\tau_c}\left(\hat{\bm{c}}_k + \Delta\bm{c}_k^{\text{grad}}\right) + (1-e^{-\Delta t/\tau_c})\bar{\bm{c}}
+    \label{eq:continuous_gm}
 \end{equation}
 
-where $\mu_{\text{gate}}=10^{-8}$ is the gating threshold. A low threshold ensures that normal maneuvers are not falsely blocked, while providing protection under high noise or weak excitation. The gate transforms the theoretical ``unidentifiability at steady state'' into a practical feature: update when needed, maintain when not.
+where $\Delta\bm{c}_k^{\text{grad}}$ is the gradient-driven update (Section~3.4) and $\bar{\bm{c}}$ is the prior mean. This continuous formulation has two regimes:
+\begin{itemize}[itemsep=0pt,topsep=4pt]
+    \item \textbf{High excitation}: $\|\Delta\bm{c}_k^{\text{grad}}\| \gg (1-e^{-\Delta t/\tau_c})\|\hat{\bm{c}}_k - \bar{\bm{c}}\|$ --- the gradient update dominates, and the GM decay acts as weak Tikhonov regularization.
+    \item \textbf{Low excitation}: $\|\Delta\bm{c}_k^{\text{grad}}\| \ll (1-e^{-\Delta t/\tau_c})\|\hat{\bm{c}}_k - \bar{\bm{c}}\|$ --- the GM decay dominates, gradually pulling the estimate toward the prior and preventing drift.
+\end{itemize}
 
-\textbf{GM time propagation}: When excitation is insufficient, the current estimate evolves according to a first-order Gauss-Markov process:
+\textbf{Motivation for continuous over binary gating}: Through systematic diagnosis, we found that binary excitation gates based on sensitivity Gramian eigenvalues ($\lambda_{\min}(\bm{W}_c) > \mu_{\text{gate}}$) remain permanently open in feedback-controlled AUVs. The root cause is twofold: (1) the CFD drag model's quadratic form provides nonzero sensitivity even at very low turn rates; (2) feedback controllers (e.g., ALOS guidance) continuously generate small heading corrections to counteract cross-track drift, preventing sustained zero-excitation conditions. The continuous approach eliminates threshold tuning and provides robust regularization regardless of excitation level.
 
-\begin{equation}
-    \hat{\bm{c}}_{k+1} = e^{-\Delta t/\tau_c}\hat{\bm{c}}_k + (1-e^{-\Delta t/\tau_c})\bar{\bm{c}}
-    \label{eq:gm}
-\end{equation}
+\subsection{Gradient Update with Adaptive Clamping}
 
-where $\tau_c=100$\,s is the current correlation time constant and $\bar{\bm{c}}$ is the prior mean (typically zero). GM propagation prevents estimate divergence during DVL outages or extended straight-line segments.
-
-\subsection{Gradient Update Law}
-
-When the excitation condition is satisfied, the current estimate is updated via gradient descent:
+The gradient-driven update $\Delta\bm{c}_k^{\text{grad}}$ in Eq.~\eqref{eq:continuous_gm} is computed as:
 
 \begin{equation}
-    \hat{\bm{c}}_{k+1} = \hat{\bm{c}}_k + \gamma \cdot \frac{\bm{\Phi}_c^T \bm{e}_{\nu}}{1 + \lambda_{\min}(\bm{W}_c) \cdot \kappa}
+    \Delta\bm{c}_k^{\text{grad}} = \gamma \cdot \frac{\bm{\Phi}_c^T \bm{e}_{\nu}}{1 + \lambda_{\min}(\bm{W}_c) \cdot \kappa}
     \label{eq:update}
 \end{equation}
 
-where $\bm{e}_{\nu} = \bm{\nu}_{k+1}^{\text{meas}} - \hat{\bm{\nu}}_{k+1|k}$ is the velocity prediction innovation (surge and sway components only), $\gamma$ is the effective gain, and $\kappa$ is an adaptive regularization coefficient. The update magnitude is clipped to $\Delta c_{\max}=0.01$\,m/s per step to prevent overshoot.
+where $\bm{e}_{\nu} = \bm{\nu}_{k+1}^{\text{meas}} - \hat{\bm{\nu}}_{k+1|k}$ is the velocity prediction innovation (surge and sway components only), $\gamma = K_{\text{obs}} \cdot 100$ is the effective gain, and $\kappa$ is the adaptive regularization coefficient. We choose the gradient direction $\bm{\Phi}_c^T\bm{e}_{\nu}$ over the Newton direction to avoid numerical instability when the Gramian is near-singular and to provide greater robustness under model mismatch.
 
-We choose the gradient direction $\bm{\Phi}_c^T\bm{e}_{\nu}$ over the Newton direction $(\bm{\Phi}_c^T\bm{\Phi}_c)^{-1}\bm{\Phi}_c^T\bm{e}_{\nu}$ for two reasons: (1) to avoid numerical instability when the Gramian is near-singular; (2) the gradient direction is more robust under model mismatch, as it does not amplify model errors through matrix inversion.
+\textbf{Adaptive clamping with online noise estimation}: To balance convergence speed against physical plausibility, we apply per-step clipping with a dynamically adjusted bound:
+
+\begin{equation}
+    \|\Delta\bm{c}_k^{\text{grad}}\| \leq \Delta c_{\max}(\hat{\sigma}_k), \quad \Delta c_{\max}(\hat{\sigma}_k) = \min\left(\Delta c_{\max}^{\text{base}} \cdot \max\left(0.5,\; \min\left(3.0,\; \frac{\hat{\sigma}_k}{\sigma_{\text{ref}}}\right)\right),\; 0.20\right)
+    \label{eq:adaptive_clamp}
+\end{equation}
+
+where $\hat{\sigma}_k$ is an exponential moving average (EMA) estimate of the instantaneous DVL noise level computed from the velocity prediction residual:
+
+\begin{equation}
+    \hat{\sigma}_k = 0.995\,\hat{\sigma}_{k-1} + 0.005\,\|\bm{e}_{\nu}\|
+    \label{eq:noise_est}
+\end{equation}
+
+$\sigma_{\text{ref}}=0.02$\,m/s is the reference DVL noise level, and $\Delta c_{\max}^{\text{base}}=0.06$\,m/s is the nominal clamp bound. The adaptive scheme: (1) maintains a tight clamp ($\approx$0.06\,m/s) under normal low-noise conditions for smooth convergence; (2) relaxes to approximately 0.18\,m/s under high noise to maintain convergence through noisy measurements; (3) enforces an absolute upper bound of 0.20\,m/s to prevent unbounded updates under any conditions.
 
 \subsection{Stability Analysis (Sketch)}
 

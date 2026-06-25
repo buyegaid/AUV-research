@@ -1,0 +1,25 @@
+% 轨迹对比实验: 圆形 vs 直线 × 4基线 × 4失配水平
+% 自动生成: 2026-06-23, plot_trajectory_comparison.m
+\begin{table}[t]
+\centering
+\caption{Current estimation accuracy across trajectory types and model mismatch levels (5 seeds, low noise $\sigma_v=0.02$\,m/s).}
+\label{tab:trajectory_comparison}
+\begin{tabular}{lcccc|cccc}
+\toprule
+\multirow{2}{*}{Mismatch} & \multicolumn{4}{c|}{Circle (sustained excitation)} & \multicolumn{4}{c}{Straight (low excitation)} \\
+\cmidrule(lr){2-5} \cmidrule(lr){6-9}
+& KIN & CFD-L & EKF & PC-RCO & KIN & CFD-L & EKF & PC-RCO \\
+\midrule
+ 0\% & 0.187 & 0.384 & \textbf{0.016} & 0.125 & 0.196 & 0.178 & \textbf{0.016} & 0.093 \\
+10\% & 0.187 & 0.382 & 0.029 & 0.147 & 0.196 & 0.180 & 0.029 & 0.090 \\
+20\% & 0.187 & 0.384 & 0.048 & 0.155 & 0.196 & 0.183 & 0.048 & 0.091 \\
+30\% & 0.187 & 0.390 & 0.067 & 0.149 & 0.196 & 0.187 & 0.067 & 0.095 \\
+\midrule
+$\Delta_{0\to30}$ & $-$0.1\% & +1.6\% & +330\% & \textbf{+20\%} & $-$0.1\% & +4.7\% & +311\% & \textbf{+2.1\%} \\
+\bottomrule
+\end{tabular}
+\\[4pt]
+\footnotesize{Best values in bold. Degradation computed as $\Delta_{0\to30}=(\text{RMSE}_{30\%}-\text{RMSE}_{0\%})/\text{RMSE}_{0\%}\times100\%$.}
+\\[4pt]
+\footnotesize{\textbf{Key findings}: (1)~EKF achieves best accuracy at zero mismatch but degrades $>300\%$ at 30\%; (2)~PC-RCO maintains single-digit degradation on straight ($+2.1\%$) and moderate degradation on circle ($+20\%$); (3)~KIN is effectively immune to mismatch ($<0.2\%$ degradation) but saturates at $\text{RMSE}_{V_c}\approx0.19$; (4)~CFD-Luenberger does not collapse on straight with low DVL noise ($\sigma_v=0.02$\,m/s), unlike the unregularized baseline in the earlier proposal.}
+\end{table}

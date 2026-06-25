@@ -1,54 +1,68 @@
-# Auto Review Log: EG-UCCO
+# Auto Review: PC-RCO 消融实验 V2
 
-**Started**: 2026-06-10
-**Previous review**: 2026-06-04 (completed, score 7.5/10)
-**Changes**: New Børhaug baseline, KIN velocity-residual rewrite, K_obs sweep(4-20→10), mismatch mechanism, 250 runs, paper filled
+**开始**: 2026-06-22
+**方法**: PC-RCO (Prediction-Correction Robust Current Observer) 海流观测器
+**审查后端**: Codex GPT-5.5 xhigh
+**难度**: medium
 
 ---
 
+## Round 1 (2026-06-22)
 
-## Round 1 (2026-06-10)
+### Assessment
+- **Score**: 4/10
+- **Verdict**: not ready
+- **Reviewer**: Codex GPT-5.5 xhigh
 
-### Assessment (Summary)
-- **Score**: 5.0/10 current → 6.5-7.0/10 after fixes
-- **Verdict**: Not ready → Almost ready (after critical fixes)
-- **Reviewer**: Codex GPT-5.5 xhigh, Ocean Engineering level
+### Key Criticisms
+1. GM decay机制未被验证 — gate永远100%打开
+2. excitation gate设计失败 — gate_mu与实际λ_min差300-600倍
+3. Prediction-correction主张不稳 — B3中NoPredCorr反而更好
+4. RMSE不是足够指标 — B3证明RMSE会奖励物理不可接受的行为
+5. Clamp物理解释需收紧 — 不是严格海流物理模型
+6. Full在B3的final bias=0.935极差 — 对0.3m/s海流来说不可接受
 
-### Key Criticisms (ranked)
-1. Core contribution doesn't match results — UCCO doesn't beat EKF
-2. Gate evidence insufficient — need UCCO-Gate vs UCCO-NoGate ablation
-3. Børhaug baseline may be strawman (RMSE=2.284 too poor)
-4. Monte Carlo results unfavorable to UCCO
-5. Main table only 2 seeds
-6. K_obs manually tuned, no sensitivity analysis provided
-7. High noise degradation not acknowledged
-8. Single platform, no real experiment
+### Reviewer Raw Response
+Score: 4/10. Verdict: 暂不建议投稿。目前结果已足够说明原始ablation有严重问题，也验证了clamp的必要性。但以"PC-RCO三机制均有效"作为论文主张站不住。更像是一篇有潜力的算法调试后研究。
 
-### Actions Taken (Round 1)
-1. **Gate ablation v2**: UCCO-Gate vs UCCO-NoGate on straight+step (5 seeds, low noise)
-   - **CRITICAL FINDING**: Gate has ZERO effect (<2% difference) in ALL scenarios
-   - UCCO-NoGate is stable on straight (RMSE 0.16) — not like Børhaug (2.28)
-   - Root cause: λ_min always > 1e-8 due to DVL noise providing perpetual "excitation"
-   - Real stability mechanisms: prediction-correction architecture + GM decay + max_dc clamping
-2. **Claims rewritten**: From "superior accuracy" → "53× better than ungated under low excitation; competitive with EKF under sustained excitation"
-3. **Børhaug renamed**: → "CFD-Luenberger observer (inspired by Børhaug 2007)"
-4. **Gate reframed**: From "excitation gate switch" → "adaptive regularization via Gramian condition number"
-5. **Gate ablation table updated**: Honest reporting that gate has no effect in tested conditions
+主要弱点：GM decay未被验证（gate=100%）、gate设计失败（λ_min永超阈值）、Prediction-correction主张不稳（B3反例）、RMSE非充分指标、clamp物理包装过度、Full在B3高bias需解释。
 
-### Gate Ablation v2 Results
+最低修改：重新设计gate使B2中gate_open%<100%、增加NoGate/GM-only对照、多目标指标、重写claims、解释B3高bias、clamp描述为数值保护。
 
-| Scenario | Mismatch | Gate | NoGate | Benefit |
-|----------|----------|------|--------|---------|
-| Straight | 0% | 0.160 | 0.158 | -1.7% |
-| Straight | 20% | 0.167 | 0.168 | +0.4% |
-| Straight | 30% | 0.173 | 0.173 | +0.3% |
-| Step | 0% | 0.216 | 0.216 | 0.0% |
-| Step | 20% | 0.224 | 0.224 | 0.0% |
-| Step | 30% | 0.229 | 0.229 | 0.0% |
-
-Gate has no measurable effect — the Gramian eigenvalue never drops below 1e-8 under test conditions.
+### Actions Taken
+1. 诊断确认: λ_min gate在圆形轨迹永不关闭 (λ_min≈3e-6 >> 1e-8)
+2. 诊断确认: 即使在直线轨迹, ALOS制导产生航向修正 → r≠0 → gate永开
+3. 测试yaw-rate替代门控: |r|>0.0005对应circle=52.6%, straight=73.1% → 仍有大量时间"开"
+4. 根本结论: 在反馈控制AUV场景中, gate机制(无论哪种判据)都无法可靠区分激励/非激励阶段
 
 ### Status
-- Continuing to Round 2
-- Pending: English paper sync, 10-seed main table, noise limitation section
+→ Continuing to Round 2
 
+---
+
+## Round 2 (2026-06-22)
+
+### Assessment
+- **Score**: 6/10 (raised from 4/10)
+- **Verdict**: 有投稿潜力，但还不是submission-ready
+
+### Key Updates
+1. 接受论文pivot：主贡献从"三机制PC-RCO" → "以clamp为核心的鲁棒估计框架"
+2. GM/gate降级为limitation/future work
+3. Prediction-correction重新定位为trade-off而非绝对优势
+
+### Reviewer's Minimum Requirements for 7-7.5/10
+1. Clamp阈值敏感性实验 (max_dc sweep: 0.01-Inf)
+2. RMSE-physical plausibility Pareto图
+3. C1压力矩阵 (mismatch × noise grid)
+4. C2 trade-off两面报告
+5. 与KIN/CFD-Luenberger/EKF baseline同场比较
+6. GM/gate limitation诚实表述
+
+### New Claim Structure
+**C1 (PRIMARY)**: Update-rate clamping prevents physically impossible estimation jumps under model mismatch and sensor noise
+**C2 (SUPPORTING)**: Prediction-correction trades convergence speed for transient smoothness
+**C3 (DESIGN)**: GM decay is a design provision for unactuated drift phases (not empirically validated)
+
+### Status
+→ Implementing Round 2 fixes: clamp sensitivity + stress grid + baseline Pareto

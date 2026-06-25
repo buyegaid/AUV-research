@@ -9,7 +9,7 @@ function [n, tau_out] = thrust(tau)
 
 % Thruster parameters
 rho = 1026;             % Water density (kg/m^3)
-D_prop = 0.10;          % Thruster diameter (m)
+D_prop = 0.08;          % Thruster diameter (m)
 KT = 0.22;              % Thrust coefficient
 
 % 推进器几何矩阵与 xhy.m 保持一致。

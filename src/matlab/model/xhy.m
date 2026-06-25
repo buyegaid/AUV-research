@@ -152,7 +152,7 @@ else
     n_max = 2500;            % 额定最大转速 (RPM)
     n_rpm = sat(ui, n_max);  % 限幅
     
-    % 推力计算：主推直径10cm，辅助推直径6cm
+    % 推力计算：主推直径8cm，辅推直径6cm
     T_vert1 = thrust_aux(n_rpm(1), rho);
     T_vert2 = thrust_aux(n_rpm(2), rho);
     T_side1 = thrust_aux(n_rpm(3), rho);

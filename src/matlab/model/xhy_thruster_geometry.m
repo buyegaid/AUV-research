@@ -1,5 +1,5 @@
 function [B_thr, pos] = xhy_thruster_geometry()
-%XHY_THRUSTER_GEOMETRY XHY 推进器几何配置（统一来源，消除多处重复定义）
+% XHY_THRUSTER_GEOMETRY XHY 推进器几何配置
 %
 % 输出:
 %   B_thr  - 6×5 推力分配矩阵，将推进器推力(N)映射为船体坐标系力/力矩(N, N·m)
@@ -12,6 +12,7 @@ function [B_thr, pos] = xhy_thruster_geometry()
 %   [[CAN协议说明]] — 推进器控制 CAN 协议
 %   [[推力分配]] — K 矩阵与推力分配矩阵
 
+% 根据实际构型得到的实际推进器力臂
 pos = struct();
 pos.x_vert_f = +0.344;   % 前垂推 X 坐标 (m)
 pos.x_vert_r = -0.293;   % 后垂推 X 坐标 (m)

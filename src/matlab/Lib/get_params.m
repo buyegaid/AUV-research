@@ -84,6 +84,22 @@ params.xhy.surge.Kd     = 5;
 params.xhy.surge.Ks     = 3;
 params.xhy.surge.phi_b  = 0.1;
 
+%% XHY Surge PID参数（pid_surge_xhy.m）
+% 纵荡速度单环PID，输出推力X_cmd (N)，替代SMC用于速度保持/跟踪
+% 参数整定依据：开环传递函数 G(s) ≈ 0.197/(20s+1)，目标带宽 ~0.5 rad/s
+params.xhy.surge_pid.m_eff       = 101.642;   % 有效质量 m+Xu_dot (kg)
+params.xhy.surge_pid.T1          = 20;        % 纵荡时间常数 (s)
+params.xhy.surge_pid.Kp          = 50;        % 比例增益 (~0.5 rad/s带宽)
+params.xhy.surge_pid.Ki          = 5;         % 积分增益 (消除稳态误差)
+params.xhy.surge_pid.Kd          = 30;        % 微分增益 (抑制超调)
+params.xhy.surge_pid.X_max       = 10;        % 推力上限 (N), 对应T5约2500RPM正向
+params.xhy.surge_pid.X_min       = -3;        % 推力下限 (N), 对应T5约2500RPM反向
+params.xhy.surge_pid.int_sep_th  = 0.1;       % 积分分离阈值 (m/s), |e|≤阈值时积分使能
+params.xhy.surge_pid.int_max     = 3;         % 积分状态幅值上限 (m·s)
+params.xhy.surge_pid.lpf_alpha   = 0.7;       % 微分低通滤波系数, τ_filt≈0.023s
+params.xhy.surge_pid.use_ff      = true;      % 启用模型前馈
+params.xhy.surge_pid.reset       = 0;         % 复位标志（仿真启动时自动复位）
+
 % 沉浮通道（m_eff_z: 85.832 + 42.87 = 128.702）
 % xhy.m 中 B=W（中性浮力），g_z=0
 params.xhy.heave.m_eff_z = 128.702;
@@ -131,13 +147,13 @@ params.pieso.tau_c = 50;    % Gauss-Markov相关时间常数 (s)，对应低频�
 params.ucco.tau_c = 100;          % GM海流相关时间常数 (s)
 params.ucco.c_mean = [0; 0];      % 海流均值 [cN; cE] (m/s)
 params.ucco.c_max = 1.5;          % 海流最大速度 (m/s)
-params.ucco.K_obs = 10.0;         % 观测器增益 [扫描最优平衡: 精度vs鲁棒性]
+params.ucco.K_obs = 10.0;         % 观测器增益 [0623重调确认: 10为最优, 5虽终值好但收敛慢→RMSE差]
 params.ucco.Q_c = 0.001;          % 海流过程噪声协方差
 params.ucco.R_inv_diag = [10, 10, 1, 1, 1, 1];  % 测量噪声逆（surge/sway高权重）
 params.ucco.window_size = 20;     % 滑动窗口大小（用于Gramian累积）
 params.ucco.gate_mu = 1e-8;% 激励门控阈值（速度层面Gramian，dt倍数后很小）
 params.ucco.sens_pert = 0.01;     % 灵敏度数值扰动步长 (m/s)
-params.ucco.max_dc = 0.06;        % 单步最大海流更新量 (m/s), ~K_obs/100
+params.ucco.max_dc = 0.06;        % 单步最大海流更新量 (m/s)
 params.ucco.reg_lambda = 0.1;     % 正则化系数（防病态）
 params.ucco.accel_lpf_alpha = 0.3;% 加速度低通滤波系数
 params.ucco.conf_scale = 0.01;    % 置信度缩放
@@ -149,7 +165,7 @@ params.ucco.delta_sensor = 0.01;    % 传感器噪声界
 
 %% Børhaug 2007 模型基海流观测器（简化速度预测型, 2026-06-10）
 % 海流估计参数
-params.borhaug.K_c = [80; 80];        % 海流积分增益 (1/s²) — 稳定收敛的最优值
+params.borhaug.K_c = [10; 10];        % 海流积分增益 [0623重调: 80→10, 扫描10-320后选10]
 params.borhaug.max_dc = 0.5;          % 单步最大海流变化 (m/s²)
 params.borhaug.tau_c = 100;           % GM海流相关时间常数 (s)
 params.borhaug.c_mean = [0; 0];       % 海流均值 [cN; cE] (m/s)
@@ -166,7 +182,7 @@ params.ekf.Q_nu = 0.001;           % 速度过程噪声
 params.ekf.Q_c = 0.0005;           % 海流过程噪声
 params.ekf.Q_b = 0.0001;           % 偏置过程噪声
 params.ekf.Q0 = 0.001;            % 默认过程噪声
-params.ekf.R0 = 0.01;             % 测量噪声（(m/s)²）
+params.ekf.R0 = 0.0004;           % 测量噪声 (m/s)² [0623重调: 0.01→4e-4, 扫描4e-4-1e-1选最优]
 params.ekf.jac_pert = 0.001;      % Jacobian数值扰动
 
 %% 运动学海流观测器参数（速度残差型, 2026-06-10）

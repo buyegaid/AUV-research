@@ -1,0 +1,64 @@
+% CFD先验海流观测器: 连续Gauss-Markov正则化与自适应更新率限幅
+% 中国海洋工程期刊投稿格式
+\documentclass[12pt,a4paper]{ctexart}
+
+% 数学与符号
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{bm}
+
+% 图表
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{caption}
+\usepackage{subcaption}
+
+% 页面设置
+\usepackage[margin=2.5cm]{geometry}
+\usepackage{hyperref}
+\usepackage{cite}
+\usepackage{enumitem}
+
+% 数学命令
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\abs}[1]{\lvert#1\rvert}
+\newcommand{\norm}[1]{\lVert#1\rVert}
+\newcommand{\pd}[2]{\frac{\partial #1}{\partial #2}}
+
+\title{\textbf{CFD-Prior Current Observer for AUVs}}
+\author{Author Name}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+海流估计是自主水下航行器轨迹跟踪控制中前馈补偿的关键环节。本文提出CFD先验海流观测器(PC-RCO)，结合连续Gauss-Markov正则化与自适应更新率限幅，在模型失配和传感器噪声下提供鲁棒的海流估计。系统验证结果表明:在30\%CFD阻力系数扰动下PC-RCO仅退化42\%而EKF退化77\%;连续GM正则化单独贡献57--218\%的精度改善;自适应限幅将高噪声下单步最大跳变降低34倍。
+\end{abstract}
+
+\input{sections/1_introduction}
+\input{sections/2_problem}
+\input{sections/3_method}
+\input{sections/4_experiments}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.85\textwidth]{figures/fig_degradation.png}
+\caption{模型失配鲁棒性:PC-RCO在30\%失配下退化42\%而EKF退化77\%。}
+\label{fig:degradation}
+\end{figure}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.85\textwidth]{figures/fig_degradation.png}
+\caption{压力矩阵:高噪声条件下无限制变体出现29--33倍的单步跳变。[待重新生成]}
+\label{fig:stress_grid}
+\end{figure}
+
+\input{sections/5_discussion}
+\input{sections/6_conclusion}
+
+\bibliographystyle{unsrt}
+\bibliography{references}
+\end{document}

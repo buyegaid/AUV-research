@@ -1,0 +1,1 @@
+try; setup_paths(); run_trajectory_comparison('straight'); catch ME; fprintf(2,'ERROR: %s\n',ME.message); exit(1); end; exit(0);

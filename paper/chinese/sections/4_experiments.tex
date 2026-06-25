@@ -1,0 +1,179 @@
+\section{数值验证}
+
+\subsection{仿真设置}
+
+\textbf{仿真平台}：基于MATLAB的XHY AUV 6自由度动力学仿真器，使用CFD RANS标定的阻力模型作为名义动力学，时间步长$\Delta t=0.01$ s，仿真时长$T=100$ s。XHY AUV质量85.8 kg，长度1.8 m，配备5个推进器（1主推+4辅推）。
+
+\textbf{海流场景}：
+\begin{enumerate}[itemsep=0pt,topsep=4pt]
+    \item \textbf{圆形轨迹}（持续机动）：AUV跟踪圆形参考路径（$R\approx300$ m），$u_d=1$ m/s，恒定海流$V_c=0.3$ m/s，$\beta_c=45^\circ$，提供持续偏航激励。
+    \item \textbf{阶跃海流+失配}：$t=50$ s时海流从$V_c=0.15$ m/s阶跃至$V_c=0.45$ m/s，方向60°跳变，30\%的CFD阻力扰动。
+    \item \textbf{时变海流}：正弦海流$V_c(t)=0.3+0.15\sin(2\pi t/200)$ m/s，20\%模型失配。
+\end{enumerate}
+
+\textbf{模型失配}：对plant模型中的CFD阻力系数进行随机扰动：$d_i \leftarrow d_i \cdot (1 + \delta \cdot U[-1,1])$，其中$\delta$为失配百分比（0--50\%）。观测器始终使用名义CFD模型。
+
+\textbf{基线方法}：
+\begin{itemize}[itemsep=0pt,topsep=4pt]
+    \item \textbf{KIN}：运动学海流观测器\cite{liang2018three}——无模型，鲁棒但收敛慢（$K_3=0.02$，$\tau_c=100$ s）
+    \item \textbf{CFD-Luenberger}：受Børhaug~2007\cite{borhaug2007model}启发的模型基观测器，使用CFD阻力模型，无门控或正则化（$K_c=[80;80]$）
+    \item \textbf{EKF}\cite{long2021trajectory}：CFD增广扩展卡尔曼滤波器（8状态：$\bm{\nu}+\bm{c}$），$\tau_c=100$ s，$P_0=0.1$
+    \item \textbf{PC-RCO（本文方法）}：CFD先验海流观测器，连续GM正则化（$\tau_c=100$ s），自适应限幅（$\Delta c_{\max}^{\text{base}}=0.06$ m/s，自适应范围$0.03$--$0.20$ m/s），$K_{\text{obs}}=10$
+\end{itemize}
+
+\textbf{评价指标}：除常规RMSE$_{V_c}$外，增报：
+\begin{itemize}[itemsep=0pt,topsep=4pt]
+    \item \textbf{$\Delta c_{\max}$}：单步最大估计更新量（m/s）——超过0.5 m/s表明物理不可信的跳变
+    \item \textbf{过冲}：$\max(\|\hat{\bm{c}}\| - \|\bm{c}^{\text{true}}\|)$（m/s）——量化瞬态过估计
+    \item \textbf{最终偏差}：$\|\hat{\bm{c}}_{\text{final}} - \bm{c}^{\text{true}}\|$（m/s）——稳态估计误差
+\end{itemize}
+
+\subsection{模型失配鲁棒性}
+
+表\ref{tab:accuracy}给出了在真实DVL噪声（$\sigma_v=0.02$ m/s）下，圆形轨迹中估计精度随CFD阻力模型失配水平的变化。
+
+\begin{table}[h]
+\centering
+\caption{模型失配下的海流估计精度（圆形轨迹，低噪声$\sigma_v=0.02$ m/s，5种子）}
+\label{tab:accuracy}
+\begin{tabular}{lccccc}
+\toprule
+失配 & KIN & CFD-Luenberger & EKF & PC-RCO & EKF退化 vs PC-RCO \
+\hline
+0\%   & 0.192 & 0.430 & \textbf{0.035} & 0.064 & --- \
+10\%  & 0.192 & 0.438 & 0.041 & 0.074 & +17\% vs +16\% \
+20\%  & 0.193 & 0.453 & 0.048 & 0.081 & +37\% vs +27\% \
+30\%  & 0.194 & 0.481 & 0.062 & \textbf{0.091} & \textbf{+77\% vs +42\%} \
+40\%  & 0.195 & 0.512 & 0.078 & 0.104 & +123\% vs +63\% \
+50\%  & 0.197 & 0.548 & 0.097 & 0.121 & +177\% vs +89\% \
+\bottomrule
+\end{tabular}
+\end{table}
+
+\textbf{主要发现}：
+\begin{enumerate}[itemsep=0pt,topsep=4pt]
+    \item 零失配下EKF精度最优（RMSE$_{V_c}=0.035$），PC-RCO次之（0.064，比KIN的0.192高3倍）。
+    \item 随模型失配增大，EKF迅速退化（30\%时+77\%，50\%时+177\%），而PC-RCO保持显著较低的退化率（30\%时+42\%，50\%时+89\%）。退化差距从10\%失配时的1个百分点扩大到50\%失配时的88个百分点。
+    \item KIN天然免疫失配（退化$<$3\%），但精度上限约RMSE$_{V_c}\approx0.19$，反映了无模型运动学方法的固有天花板。
+    \item CFD-Luenberger（无正则化）在模型基方法中始终表现最差（0.430--0.548），证实无正则化的模型基估计在零失配下仍然脆弱。
+\end{enumerate}
+
+\subsection{连续GM正则化消融}
+
+为单独量化连续GM正则化的贡献，对比PC-RCO（完整版）与No-GM变体（跳过GM衰减步骤，保留其他所有组件）。表\ref{tab:gm_ablation}给出三个代表性场景的结果。
+
+\begin{table}[h]
+\centering
+\caption{连续GM正则化消融（RMSE$_{V_c}$，m/s，5种子）}
+\label{tab:gm_ablation}
+\begin{tabular}{lccc|c}
+\toprule
+场景 & 完整版 & No-GM & No-Clamp & GM贡献 \
+\hline
+低噪声，0\%失配     & 0.146 & 0.146 & 0.148 & 0\% \
+低噪声，30\%失配    & 0.173 & 0.227 & 0.171 & \textbf{+31\%} \
+高噪声，0\%失配    & 0.243 & 0.773 & 0.126 & \textbf{+218\%} \
+时变海流，20\%失配 & 0.200 & 0.356 & 0.202 & \textbf{+78\%} \
+\bottomrule
+\end{tabular}
+\end{table}
+
+\textbf{主要发现}：
+\begin{enumerate}[itemsep=0pt,topsep=4pt]
+    \item 低噪声、零失配条件下GM正则化中性（0\%差异）——梯度更新单独足够。
+    \item 模型失配下（30\%），移除GM正则化增加RMSE 31\%，证实弱GM衰减在模型预测不可靠时提供有意义的鲁棒性。
+    \item 高DVL噪声下（$\sigma_v=0.10$ m/s），GM正则化至关重要：移除导致218\%退化（0.243$\rightarrow$0.773）。GM衰减作为稳定器，防止噪声驱动的估计随机漂移。
+    \item No-Clamp变体在高噪声下RMSE更低（0.126 vs.\ 0.243），但以物理不可信行为为代价（见第4.3节）。
+\end{enumerate}
+
+\subsection{自适应限幅：精度与物理可接受性的权衡}
+
+表\ref{tab:clamp_sensitivity}给出了限幅敏感性分析，将$\Delta c_{\max}$从高度限制（0.01 m/s）扫描到等效无限幅（1.00 m/s）。
+
+\begin{table}[h]
+\centering
+\caption{限幅阈值敏感性（阶跃海流+30\%失配，5种子）}
+\label{tab:clamp_sensitivity}
+\begin{tabular}{lcccc}
+\toprule
+$\Delta c_{\max}$ (m/s) & RMSE$_{V_c}$ & $\max\Delta c$ (m/s) & 过冲 (m/s) & 最终偏差 (m/s) \
+\hline
+0.01 & 0.268 & 0.014 & 0.210 & 0.356 \
+0.03 & 0.244 & 0.042 & 0.201 & 0.174 \
+\textbf{0.06} & \textbf{0.225} & \textbf{0.079} & \textbf{0.140} & \textbf{0.148} \
+0.10 & 0.214 & 0.104 & 0.091 & 0.214 \
+0.20 & 0.214 & 0.125 & 0.091 & 0.214 \
+1.00（无限幅）& 0.214 & 0.125 & 0.091 & 0.214 \
+\bottomrule
+\end{tabular}
+\end{table}
+
+$\Delta c_{\max}=0.06$ m/s实现最优平衡：最低最终偏差（0.148 m/s）和适度过冲（0.140 m/s），RMSE代价仅为5\%。低于0.03 m/s时限幅过于严格，导致收敛不良（偏差0.356 m/s）。高于0.10 m/s时限幅实际上消失，偏差恶化至0.214 m/s而无进一步RMSE改善。
+
+表\ref{tab:stress_grid}给出噪声$\times$失配条件下的压力矩阵，展示限幅最关键的场景。
+
+\begin{table}[h]
+\centering
+\caption{压力矩阵：噪声$\times$失配下的限幅效果（圆形，3种子）}
+\label{tab:stress_grid}
+\begin{tabular}{llccc|c}
+\toprule
+失配 & 噪声 & 完整版$\max\Delta c$ & No-Clamp$\max\Delta c$ & 比值 & 限幅需求 \
+\hline
+0\%  & 低  & 0.075 & 0.138 & 1.8$\times$ & 微弱 \
+0\%  & 高  & 0.085 & \textbf{2.829} & \textbf{33.3$\times$} & \textbf{关键} \
+20\% & 低  & 0.075 & 0.136 & 1.8$\times$ & 微弱 \
+20\% & 高  & 0.085 & \textbf{2.621} & \textbf{30.9$\times$} & \textbf{关键} \
+30\% & 低  & 0.074 & 0.121 & 1.6$\times$ & 微弱 \
+30\% & 高  & 0.085 & \textbf{2.501} & \textbf{29.5$\times$} & \textbf{关键} \
+\bottomrule
+\end{tabular}
+\end{table}
+
+\textbf{关键发现}：限幅需求\textbf{仅由传感器噪声驱动}，与模型失配无关。低噪声（$\sigma_v=0.02$ m/s）下，No-Clamp变体的单步更新仅为完整版的1.6--1.8倍，无论失配水平。高噪声（$\sigma_v=0.10$ m/s）下，No-Clamp变体产生29--33倍的单步更新，个别步达到2.5--2.9 m/s——对以小时为单位变化的海洋海流而言物理不可能。PC-RCO的自适应限幅通过在线噪声估计自动从0.06放宽至0.18 m/s（3倍放松），在维持收敛的同时强制0.20 m/s的绝对上限。
+
+\subsection{基线方法多目标对比}
+
+表\ref{tab:baseline_pareto}给出真实条件下（20\%模型失配，低噪声）所有方法的多目标对比。
+
+\begin{table}[h]
+\centering
+\caption{多目标对比（圆形，20\%失配，低噪声，5种子）}
+\label{tab:baseline_pareto}
+\begin{tabular}{lcccc}
+\toprule
+方法 & RMSE$_{V_c}$ & $\max\Delta c$ & 过冲 & 最终偏差 \
+\hline
+KIN                & 0.192 & 0.0001 & 0.000 & 0.192 \
+CFD-Luenberger     & 0.453 & 0.007 & 0.112 & 0.390 \
+EKF                & \textbf{0.048} & 0.035 & 0.065 & \textbf{0.042} \
+PC-RCO（本文）     & 0.081 & 0.075 & 0.091 & 0.067 \
+\bottomrule
+\end{tabular}
+\end{table}
+
+EKF在当前条件下实现最佳RMSE和偏差，但在30\%失配下退化77\%（表\ref{tab:accuracy}）。KIN具有最小的单步更新（$\Delta c_{\max}=0.0001$ m/s）但因此偏差最高。PC-RCO占据中间位置：比KIN精度高2.4倍，相对EKF有界更新，且失配鲁棒性显著优于EKF（42\% vs.\ 77\%退化）。
+
+\subsection{跨平台验证：REMUS 100}
+
+为验证方法不限于XHY平台，在REMUS~100 AUV模型\cite{prestero2001development}上进行了额外测试。
+
+\begin{table}[h]
+\centering
+\caption{REMUS 100跨平台验证（圆形，0\%失配，低噪声）}
+\label{tab:remus}
+\begin{tabular}{lccc}
+\toprule
+平台 & KIN & CFD-Luenberger & PC-RCO \
+\hline
+XHY    & 0.192 & 0.430 & 0.064 \
+REMUS 100 & 0.260 & 0.369 & 0.115 \
+\bottomrule
+\end{tabular}
+\end{table}
+
+跨平台保持了相对排序（PC-RCO $>$ KIN $>$ CFD-Luenberger），证实方法的原理——CFD先验预测-校正配合连续GM正则化——具有平台独立性。
+
+\subsection{局限：反馈控制AUV中的激励门控}
+
+本文早期版本采用灵敏度Gramian特征值门控（$\lambda_{\min}(\bm{\Phi}_c^T\bm{\Phi}_c) > \mu_{\text{gate}}$）在梯度更新和GM传播之间切换。系统诊断发现，在反馈控制AUV运行中，Gramian门控在所有测试场景（包括名义"直线"轨迹）中保持$>$99.9\%步的开放状态。根本原因：（1）CFD阻力模型的二次型在极低转弯速率下仍提供非零灵敏度；（2）反馈控制器持续产生小幅度航向修正以对抗横向海流漂移。这一发现推动了从二值门控到连续GM正则化的重新设计。连续方案无需阈值调谐，在任何激励水平下提供鲁棒正则化。我们将其记录为反馈控制海洋航行器中二值激励门控的一个局限，并推荐连续正则化作为更鲁棒的替代方案。

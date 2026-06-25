@@ -7,7 +7,6 @@ function [pwm_us, info] = xhy_force_moment_to_pwm(tau_cmd, params, pwm_prev_us)
 %
 %   输入:
 %     tau_cmd     6x1 或 1x6 向量 [TX TY TZ MX MY MZ]。
-%                 默认单位按 Obsidian《推力分配》文档:
 %                 TX/TY/TZ 为 g, MX/MY/MZ 为 N*m。
 %     params      可选参数结构体:
 %                 .ramp_step     PWM 平滑每周期最大变化量, 默认 50

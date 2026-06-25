@@ -163,15 +163,16 @@ end
 end
 
 function [C, g] = compute_coriolis_gravity_ekf(nu_r, psi, M)
-% 与xhy.m一致的Coriolis+重力计算
-m = 33;
-Ix = 0.540804; Iy = 2.107488; Iz = 1.849137;
+% XHY Coriolis+重力计算 (与xhy.m一致, 2026-06-23修正)
+% 之前使用REMUS 100参数(m=33)为错误值，现已修正为XHY参数
+m = 85.832;
+Ix = 1.419139; Iy = 7.173529; Iz = 6.390605;
 Ig = diag([Ix Iy Iz]);
 nu2 = nu_r(4:6);
 O3 = zeros(3,3);
 CRB = [m*Smtrx(nu2), O3; O3, -Smtrx(Ig*nu2)];
 
-MA = diag([11.2773, 132.1086, 47.104, 0.006, 0.043, 0.138]);
+MA = diag([15.81, 124.73, 42.87, 0.014, 0.041, 0.123]);
 CA = m2c(MA, nu_r);
 CA(5,3)=0; CA(3,5)=0; CA(5,1)=0; CA(1,5)=0; CA(6,1)=0; CA(1,6)=0;
 
@@ -179,8 +180,8 @@ C = CRB + CA;
 
 mu = 63.446827;
 g_mu = gravity(mu);
-W = m * g_mu;
-B = W * 1.01;
+W = m * g_mu;  % 重力
+B = W;         % 中性浮力 (与xhy.m一致)
 [~, R] = eulerang(0, 0, psi);
 r_bG = [0;0;0]; r_bB = [0;0;-0.03];
 g = gRvect(W, B, R, r_bG, r_bB);

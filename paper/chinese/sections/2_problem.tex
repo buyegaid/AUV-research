@@ -1,0 +1,65 @@
+\section{问题描述}
+
+\subsection{AUV动力学模型}
+
+AUV的6自由度动力学方程采用Fossen矢量表示\cite{fossen2011handbook}，基于相对速度形式：
+
+\begin{equation}
+    \bm{M}\dot{\bm{\nu}}_r + \bm{C}(\bm{\nu}_r)\bm{\nu}_r + \bm{D}(\bm{\nu}_r)\bm{\nu}_r + \bm{g}(\bm{\eta}) = \bm{\tau} + \bm{d}(t)
+    \label{eq:dynamics}
+\end{equation}
+
+其中$\bm{\nu}_r = \bm{\nu} - \bm{\nu}_c$为相对水流速度，$\bm{\nu}$为体坐标系对地速度，$\bm{\nu}_c$为体坐标系海流分量，$\bm{M}$为惯性矩阵（刚体+附加质量），$\bm{C}(\bm{\nu}_r)$为科氏力矩阵，$\bm{D}(\bm{\nu}_r)$为水动力阻尼矩阵，$\bm{g}(\bm{\eta})$为重力/浮力向量，$\bm{\tau}$为控制力/力矩，$\bm{d}(t)$为未建模扰动。
+
+水动力阻尼采用CFD RANS标定的二次型模型：
+
+\begin{equation}
+    \tau_{\text{drag},i} = -(d_{i1}\,\nu_{r,i} + d_{i2}\,\nu_{r,i}\,|\nu_{r,i}|), \quad i=1,\dots,6
+    \label{eq:drag}
+\end{equation}
+
+其中$d_{i1}$、$d_{i2}$为CFD标定的线性和二次阻尼系数（表\ref{tab:cfd}）。
+
+\begin{table}[h]
+\centering
+\caption{XHY AUV CFD标定阻力系数}
+\label{tab:cfd}
+\begin{tabular}{lcccccc}
+\toprule
+系数 & 纵荡 & 横荡 & 沉浮 & 横滚 & 俯仰 & 偏航 \
+\hline
+$d_1$ & 0.65 & 1.67 & 2.95 & --- & 0.5941 & 0.2046 \
+$d_2$ & 10.85 & 178.59 & 40.83 & --- & 4.088 & 18.200 \
+$R^2$ & $>$0.99 & $>$0.99 & $>$0.99 & --- & $>$0.97 & $>$0.98 \
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{海流参数化}
+
+在NED惯性坐标系中，水平海流由速度幅值$V_c$和方向角$\beta_c$参数化：
+
+\begin{equation}
+    \bm{c} = \begin{bmatrix} c_N \ c_E \end{bmatrix} = \begin{bmatrix} V_c\cos\beta_c \ V_c\sin\beta_c \end{bmatrix}
+    \label{eq:current_ned}
+\end{equation}
+
+在体坐标系下，海流分量随AUV姿态变化：
+
+\begin{equation}
+    \bm{\nu}_c = \begin{bmatrix} V_c\cos(\beta_c-\psi) \ V_c\sin(\beta_c-\psi) \ w_c \ 0 \ 0 \ 0 \end{bmatrix}
+    \label{eq:current_body}
+\end{equation}
+
+其中$\psi$为航向角。海流的时间演化建模为一阶Gauss-Markov过程，相关时间常数$\tau_c=100$ s。
+
+\subsection{CFD模型不确定性的量化表征}
+
+CFD标定提供了名义阻力系数$\bar{d}_{ij}$，但真实阻力系数存在不确定性。对于给定的扰动水平$\delta$（$0\le\delta\le 0.5$），实际阻力系数为：
+
+\begin{equation}
+    d_{ij}^{\text{plant}} = \bar{d}_{ij} \cdot (1 + \delta \cdot U[-1,1])
+    \label{eq:mismatch}
+\end{equation}
+
+其中$U[-1,1]$为均匀分布随机变量（固定种子可复现）。观测器始终使用名义系数$\bar{d}_{ij}$，plant使用扰动系数$d_{ij}^{\text{plant}}$。

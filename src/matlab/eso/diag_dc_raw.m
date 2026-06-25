@@ -13,9 +13,9 @@ pts.pos.x = (0:20:1000)'; pts.pos.y = zeros(51,1); pts.pos.z = 10*ones(51,1);
 x_state = [1;0;0;0;0;0;0;0;10;0;0;0];
 M_const = compute_M_constant();
 
-thr_params.rho=1026; thr_params.D_prop_main=0.10; thr_params.D_prop_aux=0.06;
-thr_params.KT_main_fwd=0.0293; thr_params.KT_main_rev=0.0201;
-thr_params.KT_aux_fwd=0.327; thr_params.KT_aux_rev=0.327;
+thr_params.rho=1026; thr_params.D_prop_main=0.08; thr_params.D_prop_aux=0.06;
+thr_params.KT_main_fwd=0.1489; thr_params.KT_main_rev=0.0506;
+thr_params.KT_aux_fwd=0.53; thr_params.KT_aux_rev=0.71;  % 0616非饱和
 thr_params.n_max=2500;
 thr_params.x_vert_f=+0.344; thr_params.x_vert_r=-0.293;
 thr_params.x_side_f=+0.424; thr_params.x_side_r=-0.376;

@@ -33,17 +33,18 @@ function cal = xhy_pool_calibration()
 
 cal = struct();
 
-% ===== DOF 级 k 系数（0616 CFD阻力反推, 20-80%非饱和段） =====
+% ===== DOF 级 k 系数（0616 CFD阻力反推, 20-60%非饱和段） =====
 % 单位: N/CAN-g（力通道）或 N·m/CAN-g（力矩通道）
 % 符号: 正负来自 NED 体坐标系与 CAN 坐标系的方向定义差异
+% 注: 链路1 KT见 thrust_main.m/thrust_aux.m (PWM饱和点反推, 2500RPM)
 
 % --- Surge (TX): 0616 前进非饱和段, 5段 ---
 cal.k_X = +0.000888;   % TX→Surge力 (N/CAN-g), σ=±0.00012
-                        % 0601参考: 0.000567 (max-speed), 0616增57%
+                        % 0601参考: 0.000567 (max-speed), KT_fwd=0.0370
 
 % --- Sway (TY): 0616 右移非饱和段, 4段 ---
 cal.k_Y = +0.001206;   % TY→Sway力 (N/CAN-g), σ=±0.00005 (高度一致)
-                        % 0601参考: 0.002105 (max-speed), 0616降43%
+                        % 0601参考: 0.002105 (max-speed), KT_fwd=0.388
 
 % --- Heave (TZ): 垂推无独立实验, 复用侧推标定 ---
 %   T1+T2 同向, per-thruster k 与侧推相同 (同型号 M060)

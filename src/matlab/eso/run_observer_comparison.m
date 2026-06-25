@@ -103,14 +103,14 @@ switch cfg.noise_level
         noise_scale = 5;   % DVL σ=0.10 m/s
 end
 
-%% ===== 推进器参数 =====
+%% ===== 推进器参数 (2026-06-22 分段PWM反推, 与 thrust_main/thrust_aux 保持一致) =====
 thr_params.rho         = 1026;
-thr_params.D_prop_main = 0.10;
+thr_params.D_prop_main = 0.08;     % 主推直径 8cm
 thr_params.D_prop_aux  = 0.06;
-thr_params.KT_main_fwd = 0.0293;
-thr_params.KT_main_rev = 0.0201;
-thr_params.KT_aux_fwd  = 0.327;
-thr_params.KT_aux_rev  = 0.327;
+thr_params.KT_main_fwd = 0.1489;   % 0616分段PWM, 前进100% 2250RPM
+thr_params.KT_main_rev = 0.0506;   % 0616分段PWM, 后退80% 2150RPM
+thr_params.KT_aux_fwd  = 0.53;     % 0616分段PWM, 左移100% 1370RPM
+thr_params.KT_aux_rev  = 0.71;     % 0616分段PWM, 右移100% 1681RPM
 thr_params.n_max       = 2500;
 thr_params.x_vert_f    = +0.344;
 thr_params.x_vert_r    = -0.293;

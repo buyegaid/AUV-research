@@ -1,5 +1,5 @@
-% Excitation-Gated CFD-Prior Current Observer for AUVs:
-% Robust Estimation under Hydrodynamic Model Mismatch
+% CFD-Prior Current Observer for AUVs:
+% Continuous Gauss-Markov Regularization with Adaptive Update-Rate Clamping
 % Ocean Engineering submission format
 \documentclass[12pt,a4paper]{article}
 
@@ -26,7 +26,7 @@
 \newcommand{\norm}[1]{\lVert#1\rVert}
 \newcommand{\pd}[2]{\frac{\partial #1}{\partial #2}}
 
-\title{\textbf{Excitation-Gated CFD-Prior Current Observer for AUVs:\\Robust Estimation under Hydrodynamic Model Mismatch}}
+\title{\textbf{CFD-Prior Current Observer for AUVs:\\Continuous Gauss-Markov Regularization with Adaptive Update-Rate Clamping}}
 
 \author{Author Name\textsuperscript{1,*}}
 
@@ -37,9 +37,9 @@
 \maketitle
 
 \begin{abstract}
-Accurate ocean current estimation is essential for feedforward compensation in autonomous underwater vehicle (AUV) trajectory tracking control. Existing current estimation methods face a fundamental trade-off: kinematic observers converge slowly but are inherently robust to model errors, while extended state observers (ESO) respond quickly but estimate a lumped disturbance that conflates physical currents with model uncertainty. This paper proposes an Excitation-Gated CFD-Prior Current Observer (CFD-PCO) that leverages a computational fluid dynamics (CFD) pre-calibrated hydrodynamic model as a deterministic prior, combined with a sensitivity Gramian-driven excitation gate for robust current estimation under model mismatch. Systematic validation is conducted on the XHY AUV simulation platform across 3 current scenarios, 4 model mismatch levels, and 5 baseline methods. Simulation results demonstrate that: (1) CFD-PCO achieves the lowest mean estimation error in all 12 scenario-mismatch combinations, with an average 42\% improvement over the kinematic baseline; (2) under 30\% CFD drag coefficient perturbation, CFD-PCO maintains robust performance (4\% degradation) while the tuned extended Kalman filter (EKF) exhibits 5--16\% degradation depending on the current scenario; (3) the excitation gate improves estimation accuracy by 23\% under high sensor noise compared to a no-gate variant. The proposed method provides a robust solution for AUV current estimation under hydrodynamic model mismatch.
+Accurate ocean current estimation is essential for feedforward compensation in autonomous underwater vehicle (AUV) trajectory tracking control. Model-based current observers face a fundamental challenge: under hydrodynamic model mismatch, estimation accuracy degrades, while purely kinematic observers remain robust but converge slowly. This paper proposes a CFD-Prior Current Observer (PC-RCO) that combines a CFD pre-calibrated hydrodynamic drag model with two key mechanisms: (1) \emph{continuous Gauss-Markov (GM) regularization}, which applies a weak exponential decay toward the prior mean at every time step, providing robust regularization that dominates during low-excitation phases; and (2) \emph{adaptive update-rate clamping}, which estimates the instantaneous DVL noise level online and dynamically adjusts the per-step update bound to balance convergence speed against physical plausibility. Systematic validation on the XHY AUV platform across 6 model mismatch levels (0--50\%), 4 baseline methods, and controlled noise conditions demonstrates: (1) PC-RCO degrades only 42\% under 30\% CFD drag perturbation versus 77\% for the extended Kalman filter (EKF), while maintaining 3$\times$ better accuracy than the kinematic observer at zero mismatch; (2) continuous GM regularization alone contributes 57--218\% improvement in estimation accuracy under mismatch and high-noise conditions; (3) adaptive clamping reduces the maximum per-step estimation jump by 34$\times$ under high DVL noise ($\sigma=0.10$ m/s) compared to an unclamped variant, preventing physically impossible transient estimates without sacrificing steady-state accuracy. The proposed method provides a robust, physically interpretable current estimation framework for AUVs operating under hydrodynamic model uncertainty.
 
-\textbf{Keywords:} autonomous underwater vehicle; ocean current observer; CFD prior; excitation gating; model mismatch robustness
+\textbf{Keywords:} autonomous underwater vehicle; ocean current observer; CFD prior; Gauss-Markov regularization; adaptive clamping; model mismatch robustness
 \end{abstract}
 
 \input{sections/1_introduction}
@@ -51,22 +51,22 @@ Accurate ocean current estimation is essential for feedforward compensation in a
 \begin{figure}[t]
 \centering
 \includegraphics[width=0.85\textwidth]{figures/fig_degradation.png}
-\caption{Model mismatch robustness: estimation error (RMSE$_{V_c}$) as a function of CFD drag coefficient perturbation level for the circular trajectory scenario. UCCO maintains the lowest absolute error and exhibits only 4\% degradation at 30\% mismatch.}
+\caption{Model mismatch robustness: estimation error (RMSE$_{V_c}$) as a function of CFD drag coefficient perturbation level. PC-RCO degrades 42\% under 30\% mismatch versus 77\% for EKF, with the gap widening to 88 percentage points at 50\% mismatch.}
 \label{fig:degradation}
 \end{figure}
 
 \begin{figure}[t]
 \centering
-\includegraphics[width=0.85\textwidth]{figures/fig_gate_ablation.png}
-\caption{Excitation gate ablation study under three sensor noise levels. The Gramian gate provides increasing benefit as noise increases, reaching 23\% improvement under high noise compared to the no-gate variant.}
-\label{fig:gate_ablation}
+\includegraphics[width=0.85\textwidth]{figures/fig_degradation.png}
+\caption{Stress grid: per-step maximum update ($\Delta c_{\max}$) under noise $\times$ mismatch. Clamping is critically needed under high noise conditions where unclamped variants exhibit 29--33$\times$ larger per-step jumps. Under low noise, the clamp has marginal effect (1.6--1.8$\times$). [FIGURE TO BE REGENERATED]}
+\label{fig:stress_grid}
 \end{figure}
 
 \begin{figure}[t]
 \centering
-\includegraphics[width=0.95\textwidth]{figures/fig_montecarlo.png}
-\caption{Monte Carlo validation (10 random seeds, low sensor noise). Error bars indicate $\pm 1$ standard deviation. UCCO achieves the lowest estimation error under model mismatch (20\%) in both circular and straight trajectory scenarios.}
-\label{fig:montecarlo}
+\includegraphics[width=0.85\textwidth]{figures/fig_montecarlo.png}
+\caption{Clamp threshold sensitivity: RMSE, overshoot, and final bias as functions of the base clamp threshold $\Delta c_{\max}$. The optimal operating point at 0.06\,m/s achieves the lowest bias with moderate RMSE penalty. [FIGURE TO BE REGENERATED]}
+\label{fig:clamp_sensitivity}
 \end{figure}
 \input{sections/5_discussion}
 \input{sections/6_conclusion}
