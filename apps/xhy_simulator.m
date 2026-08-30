@@ -7,8 +7,8 @@ clear smc_yaw_xhy smc_pitch_xhy smc_surge_xhy smc_heave_xhy my_ALOS3D vec_leso_u
 
 %% 宏参数
 useESO    = 0;   % 是否使用ESO补偿
-usePIESO  = 1;   % 是否使用物理信息ESO（PI-ESO，Gauss-Markov海流模型）
-TrajMode  = 2;   % 1-直线, 2-圆形
+usePIESO  = 0;   % 是否使用物理信息ESO（PI-ESO，Gauss-Markov海流模型）
+TrajMode  = 1;   % 1-直线, 2-圆形
 DepthMode = 2;   % 1-俯仰控深, 2-直接Z力控深
 ThrMode   = 1;   % 1-数字孪生(PWM+M080/M060+水池标定), 2-传统(RPM+KT系数)
 params    = get_params;
@@ -19,8 +19,8 @@ t = 0:h:T;
 N = length(t);
 
 %% 初始状态
-xn = 0; yn = 0; zn = 10;
-psi0 = 0;
+xn = 0; yn = 0; zn = 10; % 初始位置
+psi0 = 0; % 艏向
 x = [1; 0; 0; 0; 0; 0; xn; yn; zn; 0; 0; psi0];  % [u v w p q r x y z phi theta psi]
 
 %% 参考量初始化

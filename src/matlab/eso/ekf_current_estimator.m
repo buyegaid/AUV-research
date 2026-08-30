@@ -1,11 +1,11 @@
 function [x_hat, P, aux] = ekf_current_estimator(x_hat, P, nu_meas, tau, psi, M, params, dt)
-% CFD增广EKF海流估计器（强基线）
+% 增广EKF海流估计器（强基线）
 %
 % 两个模式:
 %   mode=1: x = [u v w p q r cN cE]' (8状态, 仅增广海流)
 %   mode=2: x = [u v w p q r cN cE b1 b2 b3 b4 b5 b6]' (14状态, 增广海流+力偏置)
 %
-% 过程模型: CFD 6-DOF动力学 + GM海流模型
+% 过程模型: 6-DOF动力学 + GM海流模型
 % 测量模型: ν(1:6) 直接测量 (DVL + IMU)
 %
 % 输入:
@@ -64,7 +64,7 @@ else
     b_tau = zeros(6,1);
 end
 
-% CFD动力学预测
+% 动力学预测
 [tau_drag, ~] = xhy_drag_cfd(nu_r);
 [C_nu, g_nu] = compute_coriolis_gravity_ekf(nu_r, psi, M);
 r = nu_hat(6);
@@ -163,8 +163,7 @@ end
 end
 
 function [C, g] = compute_coriolis_gravity_ekf(nu_r, psi, M)
-% XHY Coriolis+重力计算 (与xhy.m一致, 2026-06-23修正)
-% 之前使用REMUS 100参数(m=33)为错误值，现已修正为XHY参数
+% XHY Coriolis+重力计算
 m = 85.832;
 Ix = 1.419139; Iy = 7.173529; Iz = 6.390605;
 Ig = diag([Ix Iy Iz]);

@@ -185,6 +185,22 @@ params.ekf.Q0 = 0.001;            % 默认过程噪声
 params.ekf.R0 = 0.0004;           % 测量噪声 (m/s)² [0623重调: 0.01→4e-4, 扫描4e-4-1e-1选最优]
 params.ekf.jac_pert = 0.001;      % Jacobian数值扰动
 
+%% ESKF 误差状态卡尔曼滤波参数（2026-07-09）
+% 参数与EKF共用同一套（ESKF在向量空间下与EKF数学等价）
+% 独立字段便于未来差异化调参
+params.eskf.use_bias = false;      % 8状态（无力偏置）
+params.eskf.tau_c = 100;           % 海流GM时间常数
+params.eskf.tau_b = 50;            % 力偏置时间常数
+params.eskf.c_mean = [0; 0];       % 海流均值
+params.eskf.c_max = 1.5;           % 海流约束
+params.eskf.P0 = 0.1;              % 初始误差协方差
+params.eskf.Q_nu = 0.001;          % 速度过程噪声
+params.eskf.Q_c = 0.0005;          % 海流过程噪声
+params.eskf.Q_b = 0.0001;          % 偏置过程噪声
+params.eskf.Q0 = 0.001;            % 默认过程噪声
+params.eskf.R0 = 0.0004;           % 测量噪声 (m/s)²
+params.eskf.jac_pert = 0.001;      % Jacobian数值扰动
+
 %% 运动学海流观测器参数（速度残差型, 2026-06-10）
 % K3: 从速度残差 (m/s) → 海流变化率 (m/s²) 的增益
 %     收敛时间 ≈ 1/K3 ≈ 10s

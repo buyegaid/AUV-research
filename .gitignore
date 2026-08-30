@@ -46,7 +46,7 @@ desktop.ini
 output/
 results/
 figures/
-
+data/
 # LaTeX 编译中间文件
 paper/*.aux
 paper/*.bbl

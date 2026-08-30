@@ -44,16 +44,19 @@ Ig = diag([Ix Iy Iz]);
 
 % Rigid-body matrices expressed in the CG 在质心CG坐标系中构造刚体质量矩阵
 MRB_CG = diag([ m m m Ix Iy Iz ]);
-
+disp(MRB_CG)
 % 科氏-离心矩阵
 CRB_CG = [ m * Smtrx(nu2)    O3
     O3               -Smtrx(Ig*nu2) ];
+disp(CRB_CG)
 
 % Transform MRB and CRB from the CG to the CO 从质心转换到体心
 H = Hmtrx(r_bg);
 MRB = H' * MRB_CG * H;
+disp(MRB)
 CRB = H' * CRB_CG * H;
-
+disp(CRB)
+    
 
 
 

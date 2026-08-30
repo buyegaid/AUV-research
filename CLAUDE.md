@@ -102,10 +102,6 @@ project_root = setup_paths(); test_xhy_dynamics
 - **注释语言：** 中文
 - **编程语言**：matlab
 
-## 横滚通道不可控
-
-XHY 的 B_thr 矩阵第 4 行（K 通道）全为 0，5 推进器配置无法产生独立横滚力矩，推力分配使用伪逆求解。
-
 ## 飞书通知
 
 使用 `/feishu-notify-auv` skill 或 `notify_feishu.sh` 脚本向用户发送实验/仿真完成通知。
